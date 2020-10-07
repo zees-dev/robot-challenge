@@ -28,7 +28,7 @@ The robot provids a set of low level SDK functions in GO to control its movement
     - `taskID`: Unique task identifier 
     - `taskComplete`: The event indicates the task was completed 
 - `func Cancel(taskID string) error` Requests robot to cancel the task.
-- `func CurrentPosition() x, y float` Returns the absolute position value on the map.
+- `func CurrentPosition() (x, y float)` Returns the absolute position value on the map.
 
 ## Requirements
 - Create a restful api to accept a series of commands to the robot. 
