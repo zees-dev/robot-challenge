@@ -22,14 +22,17 @@ If the robot starts in the south-west corner of the warehouse then the following
 
 ## Robot SDK Commands 
 
-The robot provided a set of low level SDK in GO to control its movement. 
+The robot provids a set of low level SDK functions in GO to control its movement. 
 
-- `func MoveTo(x, y float) (taskID string, taskComplete chan error)` Requests robot move to an absolute position x, y on the map.  
+- `func MoveTo(x, y float) (taskID string, taskComplete chan error)` Requests robot move to an absolute position x, y on the map. 
     - `taskID`: Unique task identifier 
-    - `taskComplete`: The event indicates that the task complete 
+    - `taskComplete`: The event indicates the task was completed 
 - `func Cancel(taskID string) error` Requests robot to cancel the task.
 - `func CurrentPosition() x, y float` Returns the absolute position value on the map.
 
 ## Requirements
-- Create a way to send a series of commands to the robot
-- Make sure that the robot doesn't try to move outside the warehouse
+- Create a restful api to accept a series of commands to the robot. 
+- Make sure that the robot doesn't try to move outside the warehouse.
+
+## Challenge
+- The Robot SDK is still under development, you need to find a way to approve your api logic is working.
