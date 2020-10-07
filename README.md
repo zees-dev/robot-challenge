@@ -35,6 +35,7 @@ The robot provids a set of low level SDK functions in GO to control its movement
 - Make sure that the robot doesn't try to move outside the warehouse.
 - Create a restful api to report commands series exection status.
 - Create a restful api cancel the commands series.
+- The restful service should be written in Golang.
 
 ## Challenge
 - The Robot SDK is still under development, you need to find a way to prove your api logic is working.
