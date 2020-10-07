@@ -38,4 +38,4 @@ The robot provids a set of low level SDK functions in GO to control its movement
 
 ## Challenge
 - The Robot SDK is still under development, you need to find a way to prove your api logic is working.
-- The ground control station wants to be notified whenever the command sequence completed. Please provide a high level design overview how you can achieve it.
+- The ground control station wants to be notified as soon as the command sequence completed. Please provide a high level design overview how you can achieve it.
