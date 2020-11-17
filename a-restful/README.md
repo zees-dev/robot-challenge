@@ -20,15 +20,29 @@ If the robot starts in the south-west corner of the warehouse then the following
 
 "N E N E N E N E"
 
-## Robot SDK Commands 
+## Robot SDK Interface 
 
 The robot provids a set of low level SDK functions in GO to control its movement. 
 
-- `func MoveTo(x, y float) (taskID string, taskComplete chan error)` Requests the robot to move to an absolute position x, y on the map. 
-    - `taskID`: Unique task identifier 
-    - `taskComplete`: The event indicates the task was completed 
-- `func Cancel(taskID string) error` Requests that the robot cancel its task.
-- `func CurrentPosition() (x, y float)` Returns the absolute position value on the map.
+```
+type Warehouse interface {
+	Robots() []Robot
+}
+
+type Robot interface {
+	EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) 
+
+	CancelTask(taskID string) error
+
+	CurrentState() RobotState
+}
+
+type RobotState struct {
+	X uint
+	Y uint
+	HasCrate bool
+}
+```
 
 ## Requirements
 - Create a RESTful API to accept a series of commands to the robot. 
