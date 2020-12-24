@@ -54,3 +54,29 @@ type RobotState struct {
 
 - The Robot SDK is still under development, you need to find a way to prove your API logic is working.
 - The ground control station wants to be notified as soon as the command sequence completed. Please provide a high level design overview how you can achieve it. This overview is not expected to be hugely detailed but should clearly articulate the fundamental concept in your design.
+
+---
+
+## Implementation
+
+...
+
+## TODO
+
+- [ ] Design of core structs - to store robot information in memory
+  - Store each robot in 10x10 grid
+  - Implement the SDK interfaces
+  - Implement minimal frontend or console UI to view state of a warehouse
+  - Serve this static SPA or directory from backend API
+- [ ] OpenAPI compliant spec
+  - Have a look at Twirp, GRPC-gateway
+  - Have a look at Go Kit - the transport should a decoupled part of the architecture
+- [ ] Implement tests for API
+  - Implement test coverage
+- [ ] Dockerize API
+
+## Improvements
+
+- [ ] Implement Auth (JWT usinng bearer scheme)
+- [ ] Persist robot operations to a database (sqlite will do)
+- [ ] Distribute to [pkg.go.dev](https://pkg.go.dev/) for open source projects
