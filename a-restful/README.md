@@ -65,14 +65,19 @@ type RobotState struct {
 
 - [ ] Design of core structs - to store robot information in memory
   - Store each robot in 10x10 grid
-  - Implement the SDK interfaces
-  - Implement minimal frontend or console UI to view state of a warehouse
-  - Serve this static SPA or directory from backend API
+  - Implement the SDK interfaces using custom structs
 - [ ] OpenAPI compliant spec
   - Have a look at Twirp, GRPC-gateway
   - Have a look at Go Kit - the transport should a decoupled part of the architecture
-- [ ] Implement tests for API
+- [ ] Implement unit tests for functionality
+- [ ] Implement integrations tests for API
   - Implement test coverage
+- [ ] Challenge
+  - Implement minimal frontend or console UI to view state of a warehouse
+  - Serve this static SPA or directory from backend API
+  - A `writer` should get notified of successful command completion (potentially write output to file)
+    - Provide high level design overview
+    - The writer sends server-side event to an admin panel?
 - [ ] Dockerize API
 
 ## Improvements
@@ -80,3 +85,9 @@ type RobotState struct {
 - [ ] Implement Auth (JWT usinng bearer scheme)
 - [ ] Persist robot operations to a database (sqlite will do)
 - [ ] Distribute to [pkg.go.dev](https://pkg.go.dev/) for open source projects
+
+## Self-defined constraints & assumptions
+
+- Robos should not be able to collide with each other (error thrown if/when this happens)
+- A 10x10 grid south-west = (0,0), while north-east = (9,9) - instead of (10,10)
+- `"N E N E N E N E"` ends up at (4,4) - there cannot be a true `center` for a 10x10 grid
