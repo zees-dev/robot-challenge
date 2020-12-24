@@ -20,31 +20,32 @@ If the robot starts in the south-west corner of the warehouse then the following
 
 "N E N E N E N E"
 
-## Robot SDK Interface 
+## Robot SDK Interface
 
-The robot provids a set of low level SDK functions in GO to control its movement. 
+The robot provids a set of low level SDK functions in GO to control its movement.
 
-```
+```go
 type Warehouse interface {
-	Robots() []Robot
+  Robots() []Robot
 }
 
 type Robot interface {
+  EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) 
 	EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) 
-
-	CancelTask(taskID string) error
-
-	CurrentState() RobotState
+  EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) 
+  CancelTask(taskID string) error
+  CurrentState() RobotState
 }
 
 type RobotState struct {
-	X uint
-	Y uint
-	HasCrate bool
+  X uint
+  Y uint
+  HasCrate bool
 }
 ```
 
 ## Requirements
+
 - Create a RESTful API to accept a series of commands to the robot. 
 - Make sure that the robot doesn't try to move outside the warehouse.
 - Create a RESTful API to report the command series's execution status.
@@ -52,5 +53,6 @@ type RobotState struct {
 - The RESTful service should be written in Golang.
 
 ## Challenge
+
 - The Robot SDK is still under development, you need to find a way to prove your API logic is working.
 - The ground control station wants to be notified as soon as the command sequence completed. Please provide a high level design overview how you can achieve it. This overview is not expected to be hugely detailed but should clearly articulate the fundamental concept in your design.
