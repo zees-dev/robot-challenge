@@ -31,8 +31,6 @@ type Warehouse interface {
 
 type Robot interface {
   EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) 
-	EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) 
-  EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) 
   CancelTask(taskID string) error
   CurrentState() RobotState
 }
