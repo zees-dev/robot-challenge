@@ -27,8 +27,8 @@ func BodyToUpdateBot(reqBody io.Reader) (UpdateBot, error) {
 	return obj, nil
 }
 
-// robotServer is the Restful API server exposed by robot which enables ground control station to communicate with it
-func robotServer(robot Bot) {
+// robotAPIServer is the Restful API server exposed by robot which enables ground control station to communicate with it
+func robotAPIServer(robot Bot) {
 	router := mux.NewRouter()
 
 	// Robot movement
@@ -59,7 +59,7 @@ func robotServer(robot Bot) {
 	// 	fmt.Fprintf(w, "%v", tasks)
 	// }).Methods("GET")
 
-	// GetTask
+	// GetTask by id
 	router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
 		// TODO use request context
 		vars := mux.Vars(r)
@@ -78,7 +78,7 @@ func robotServer(robot Bot) {
 		fmt.Fprintf(w, "%v", task)
 	}).Methods("GET")
 
-	// Cancel Task
+	// Cancel Task by id
 	router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
