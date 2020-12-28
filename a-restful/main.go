@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("Invalid robot x position; y co-ordinate must satisfy 0 <= y < %d", yDimension)
 	}
 
-	db := NewDB()
+	db := NewInMemoryDB()
 
 	robot := NewBot(x, y, db)
 	go robot.RunRobot()

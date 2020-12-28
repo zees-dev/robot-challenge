@@ -65,7 +65,7 @@ func (b Building) Robots() []Robot {
 // * implements robot interface
 type Bot struct {
 	mu               sync.RWMutex
-	storage          Repository
+	repository       Repository
 	state            RobotState
 	movementDuration time.Duration
 	tasks            chan string
@@ -75,13 +75,13 @@ type Bot struct {
 }
 
 // NewBot instantiates a bot on a specified location on the roof
-func NewBot(x uint, y uint, storage Repository) Bot {
+func NewBot(x uint, y uint, repository Repository) Bot {
 	return Bot{
-		storage: storage,
-		state:   RobotState{X: x, Y: y},
-		tasks:   make(chan string),
-		States:  make(chan RobotState),
-		Errors:  make(chan error)}
+		repository: repository,
+		state:      RobotState{X: x, Y: y},
+		tasks:      make(chan string),
+		States:     make(chan RobotState),
+		Errors:     make(chan error)}
 }
 
 // RunRobot runs the robot to process incoming commands
@@ -105,7 +105,7 @@ func (b *Bot) RunRobot() {
 					b.UpdateCurrentState(updatedState)
 					go func() { b.States <- updatedState }() // independent consumer can consume state changes
 
-					log.Printf("Task states: %v", b.storage) // TODO remove
+					log.Printf("Task states: %v", b.repository) // TODO remove
 					taskToProcess.success = true
 					b.PutTask(taskID, taskToProcess)
 				}
@@ -147,7 +147,7 @@ func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotSta
 	position = b.States
 	err = b.Errors
 
-	b.storage.CreateTask(Task{taskID, commands, false, false, false})
+	b.repository.CreateTask(Task{taskID, commands, false, false, false})
 	b.tasks <- taskID
 
 	return
@@ -157,14 +157,14 @@ func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotSta
 func (b Bot) PutTask(id string, task Task) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.storage.UpdateTask(task)
+	b.repository.UpdateTask(task)
 }
 
 // GetTask retrieves a task from the map - base on its id
 func (b Bot) GetTask(id string) (Task, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	return b.storage.GetTask(id)
+	return b.repository.GetTask(id)
 }
 
 // getUpdatedState translates a sequence of space delimited movement commands to a final RobotState

@@ -12,19 +12,19 @@ type Repository interface {
 	UpdateTask(ut Task) error
 }
 
-// DB is a struct which stores robot tasks in-memory
-type DB struct {
+// InMemoryDB is a struct which stores robot tasks in-memory
+type InMemoryDB struct {
 	mu    sync.RWMutex // RW mutex to allow multiple readers but single writer
 	tasks []Task
 }
 
-// NewDB instantiates empty database of robot tasks
-func NewDB() *DB {
-	return &DB{}
+// NewInMemoryDB instantiates empty database of robot tasks
+func NewInMemoryDB() *InMemoryDB {
+	return &InMemoryDB{}
 }
 
 // GetTask gets structure from in-memory DB by ID in a concurrent-safe way
-func (db *DB) GetTask(id string) (Task, error) {
+func (db *InMemoryDB) GetTask(id string) (Task, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	for _, t := range db.tasks {
@@ -36,7 +36,7 @@ func (db *DB) GetTask(id string) (Task, error) {
 }
 
 // CreateTask creates task in in-memory DB by ID in a concurrent-safe way
-func (db *DB) CreateTask(ct Task) error {
+func (db *InMemoryDB) CreateTask(ct Task) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	for _, t := range db.tasks {
@@ -49,7 +49,7 @@ func (db *DB) CreateTask(ct Task) error {
 }
 
 // UpdateTask updates task in in-memory DB in a concurrent-safe way
-func (db *DB) UpdateTask(ut Task) error {
+func (db *InMemoryDB) UpdateTask(ut Task) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	for i, t := range db.tasks {
