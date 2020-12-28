@@ -44,7 +44,7 @@ type RobotState struct {
 
 ## Requirements
 
-- Create a RESTful API to accept a series of commands to the robot. 
+- Create a RESTful API to accept a series of commands to the robot.
 - Make sure that the robot doesn't try to move outside the warehouse.
 - Create a RESTful API to report the command series's execution status.
 - Create a RESTful API cancel the command series.
@@ -61,33 +61,130 @@ type RobotState struct {
 
 ...
 
+### Assumptions
+
+- There is no time taken to execute a sequence of commands (assuming they are valid and  can be performed)
+  - Hence it is probably only possible to cancel an in-flight command if the server is receiving too many commands and the desired command associated to taskID has not been executed yet (still in channel queue)
+- There is only a single robot operating on the roof (registrations and/or collisions with  other robots is out of scope)
+
+### Features
+
+- This solution should enable high-throughput, concurrent safe robot operations
+- OpenAPI spec for Restful API calls
+- Pluggable storage (in-memory map, database or any other storage) - achieved via implementation of repository interface
+- Serverside event support - a client can subscribe to HTTP2 SSE to get real-time updates of robot state
+
+## 3rd party modules
+
+- [uuid](github.com/satori/go.uuid) - for unique taskID generation
+- [gorilla mux](github.com/gorilla/mux) - http request multiplexer (standard library compliant)
+
 ## TODO
 
-- [ ] Design of core structs - to store robot information in memory
-  - Store each robot in 10x10 grid
-  - Implement the SDK interfaces using custom structs
+- [ ] Implement Restful API endpoints
+  - Move robot (PUT)
+    - /move
+    - 200 (ok) - taskId & success/failure, 400 (bad request)
+      - failure if robot collides with another or attempts to go outside of warehouse
+    - Note: Use context
+  - Get list of commands sent to robot (taskId) with status (success/failed) (GET)
+    - /tasks
+    - 200 (ok)
+  - Get single command status by taskId (GET)
+    - /task/{id}
+    - 200 (ok), 404 (command sequence with taskId not found)
+  - Cancel command series (Delete)
+    - /task/{id}
+    - 204 (no content), 404 (command sequence with taskId not found)
+
+- [ ] Challenge SSE (server-sent-events) which sends -> taskId, status, robot final state
+  - Write up design/architecture doc (SSE, HTTP/2, browser support)
+
 - [ ] OpenAPI compliant spec
   - Have a look at Twirp, GRPC-gateway
   - Have a look at Go Kit - the transport should a decoupled part of the architecture
-- [ ] Implement unit tests for functionality
-- [ ] Implement integrations tests for API
-  - Implement test coverage
+
+- [ ] Testing
+  - [ ] Implement unit tests for functionality
+  - [ ] Implement integrations tests for API
+  - [ ] Implement test coverage
+
 - [ ] Challenge
   - Implement minimal frontend or console UI to view state of a warehouse
-  - Serve this static SPA or directory from backend API
+    - Serve this static SPA or directory from backend API
   - A `writer` should get notified of successful command completion (potentially write output to file)
-    - Provide high level design overview
+    - Write up design/architecture doc (SSE, HTTP/2, browser support)
     - The writer sends server-side event to an admin panel?
+      - SSE (server-sent-events) which sends -> taskId, status, robot final state
+
 - [ ] Dockerize API
 
 ## Improvements
 
-- [ ] Implement Auth (JWT usinng bearer scheme)
+- [ ] Implement Auth (JWT using bearer scheme)
 - [ ] Persist robot operations to a database (sqlite will do)
 - [ ] Distribute to [pkg.go.dev](https://pkg.go.dev/) for open source projects
 
 ## Self-defined constraints & assumptions
 
 - Robos should not be able to collide with each other (error thrown if/when this happens)
+- The robot takes a certain time to move - this has been defaulted to 1 second per move
 - A 10x10 grid south-west = (0,0), while north-east = (9,9) - instead of (10,10)
 - `"N E N E N E N E"` ends up at (4,4) - there cannot be a true `center` for a 10x10 grid
+
+## Architecture
+
+- 2 servers
+  - RESTful Admin API server
+    - Deals with warehouse/bot creation
+    - Responsible for spinning up warehouse server(s)
+    - This server can double up as Auth server
+  - RESTful Warehouse API server
+    - Responsible for bot control within a warehouse
+    - Service contains in-memory state of a warehouse
+    - Successful bot state changes written to DB
+    - Ideally this server should use an IoT optimized protocol - gRPC would be perfect here
+
+## Rest Endpoints
+
+Move bot:
+
+```sh
+curl \
+  -d '{"commands": "N E N E"}' \
+  -X PUT localhost:8000/move
+```
+
+<!-- Get all warehouses
+
+```sh
+curl localhost:8000/warehouse
+```
+
+Create warehouse:
+
+```sh
+curl \
+  -d '{"id": 1, "width": 10, "height": 10}' \
+  -X POST localhost:8000/warehouse
+```
+
+Get warehouse by id
+
+```sh
+curl localhost:8000/warehouse/1
+```
+
+Create bot:
+
+```sh
+curl \
+  -d '{"id": 1, "warehouseId": 1, "x": 1, "y": 1}' \
+  -X POST localhost:8000/bot
+```
+
+```sh
+curl \
+  -d '{"id": 1, "warehouseId": 1, "x": 1, "y": 1}' \
+  -X POST localhost:8000/bot
+``` -->
