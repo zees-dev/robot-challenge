@@ -85,14 +85,14 @@ func robotAPIServer(robot Bot) {
 
 		err := robot.CancelTask(id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
 	}).Methods("DELETE")
 
-	log.Println("Starting admin server on :8000")
+	log.Println("Starting admin server on :8000...")
 	err := http.ListenAndServe(":8000", router)
 	log.Fatal(err)
 }

@@ -6,6 +6,7 @@ import (
 )
 
 // Repository contains signature which a storage/persistent layer must implement
+// * This enables support for a pluggable persistent layer
 type Repository interface {
 	GetTask(id string) (Task, error)
 	CreateTask(ct Task) error

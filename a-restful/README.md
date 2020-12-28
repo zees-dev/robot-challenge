@@ -85,7 +85,6 @@ type RobotState struct {
   - Move robot (PUT)
     - /move
     - 200 (ok) - taskId & success/failure, 400 (bad request)
-      - failure if robot collides with another or attempts to go outside of warehouse
     - Note: Use context
   - Get list of commands sent to robot (taskId) with status (success/failed) (GET)
     - /tasks
