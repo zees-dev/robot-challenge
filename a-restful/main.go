@@ -18,20 +18,12 @@ func main() {
 	if y >= yDimension {
 		log.Fatalf("Invalid robot x position; y co-ordinate must satisfy 0 <= y < %d", yDimension)
 	}
-	// TODO (improvement) - check if not being registered on an existing robos location (if multi-robots are supported)
 
-	// db := NewDB()
-	// latestState, err := db.GetLatestState()
-	// if err != nil {
-	// 	log.Println(err)
-	// } else {
-	// 	x, y = latestState.X, latestState.Y
-	// }
+	db := NewDB()
 
-	robot := NewBot(x, y)
+	robot := NewBot(x, y, db)
 	go robot.RunRobot()
 	log.Printf("Initialising robot at (%d, %d)...", x, y)
-	// robotSvc := NewRobotService(db, robot)
 
 	// TODO run static file server
 	// TODO serve OpenAPI spec from static file server

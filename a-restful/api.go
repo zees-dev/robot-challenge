@@ -69,7 +69,7 @@ func robotAPIServer(robot Bot) {
 			return
 		}
 
-		task, err := robot.getTask(id)
+		task, err := robot.GetTask(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

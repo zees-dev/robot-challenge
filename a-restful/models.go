@@ -32,6 +32,7 @@ type RobotState struct {
 
 // Task is used to identify whether robot has successfully completed a sequence of commands
 type Task struct {
+	id        string
 	command   string
 	executed  bool
 	success   bool
@@ -64,7 +65,7 @@ func (b Building) Robots() []Robot {
 // * implements robot interface
 type Bot struct {
 	mu               sync.RWMutex
-	taskMap          map[string]Task
+	storage          Repository
 	state            RobotState
 	movementDuration time.Duration
 	tasks            chan string
@@ -74,9 +75,9 @@ type Bot struct {
 }
 
 // NewBot instantiates a bot on a specified location on the roof
-func NewBot(x uint, y uint) Bot {
+func NewBot(x uint, y uint, storage Repository) Bot {
 	return Bot{
-		taskMap: map[string]Task{},
+		storage: storage,
 		state:   RobotState{X: x, Y: y},
 		tasks:   make(chan string),
 		States:  make(chan RobotState),
@@ -88,25 +89,25 @@ func (b *Bot) RunRobot() {
 	for {
 		select {
 		case taskID := <-b.tasks:
-			taskToProcess, err := b.getTask(taskID)
+			taskToProcess, err := b.GetTask(taskID)
 			if err != nil {
 				log.Printf("Task %s cannot be processed - not found", taskID)
 				go func() { b.Errors <- err }()
 			} else {
-				log.Printf("Processing command: \"%s\"", taskToProcess.command)
+				log.Printf("Processing commands: \"%s\"", taskToProcess.command)
 				updatedState, err := b.getUpdatedState(taskToProcess.command)
 				taskToProcess.executed = true
 				if err != nil {
-					b.putTask(taskID, taskToProcess)
+					b.PutTask(taskID, taskToProcess)
 					go func() { b.Errors <- err }() // independent consumer can consume errors
 				} else {
 					log.Printf("Updating robot to new state: %v", updatedState)
 					b.UpdateCurrentState(updatedState)
 					go func() { b.States <- updatedState }() // independent consumer can consume state changes
 
-					log.Printf("Task states: %v", b.tasks) // TODO remove
+					log.Printf("Task states: %v", b.storage) // TODO remove
 					taskToProcess.success = true
-					b.putTask(taskID, taskToProcess)
+					b.PutTask(taskID, taskToProcess)
 				}
 			}
 		case err := <-b.Errors: // Example of consumer consuming errors
@@ -140,34 +141,30 @@ func validateCommandSequence(commands string) error {
 // EnqueueTask queues a task on the `taskCommand` bot channel to be processed by `RunRobot` function
 // * implements robot
 func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) {
-	log.Printf("Processing commands: \"%s\"", commands)
+	log.Printf("Queueing commands: \"%s\"", commands)
 
 	taskID = uuid.NewV4().String()
 	position = b.States
 	err = b.Errors
 
-	b.putTask(taskID, Task{commands, false, false, false})
+	b.storage.CreateTask(Task{taskID, commands, false, false, false})
 	b.tasks <- taskID
 
 	return
 }
 
-// putTask stores the task on a map
-func (b Bot) putTask(id string, task Task) {
+// PutTask stores the task on a map
+func (b Bot) PutTask(id string, task Task) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.taskMap[id] = task
+	b.storage.UpdateTask(task)
 }
 
-// getTask retrieves a task from the map - base on its id
-func (b Bot) getTask(id string) (Task, error) {
+// GetTask retrieves a task from the map - base on its id
+func (b Bot) GetTask(id string) (Task, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	task, ok := b.taskMap[id]
-	if !ok {
-		return Task{}, fmt.Errorf("Unable to find task %s", id)
-	}
-	return task, nil
+	return b.storage.GetTask(id)
 }
 
 // getUpdatedState translates a sequence of space delimited movement commands to a final RobotState
@@ -201,12 +198,12 @@ func (b Bot) getUpdatedState(commands string) (RobotState, error) {
 // CancelTask sets an existing task on the map to be cancelled
 // * implements robot
 func (b Bot) CancelTask(taskID string) error {
-	task, err := b.getTask(taskID)
+	task, err := b.GetTask(taskID)
 	if err != nil {
 		return err
 	}
 	task.cancelled = true
-	b.putTask(taskID, task)
+	b.PutTask(taskID, task)
 	return nil
 }
 
