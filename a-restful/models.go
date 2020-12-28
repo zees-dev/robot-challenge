@@ -1,14 +1,17 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
+// Warehouse is the structure in which robots operate
+// - robots operate on a 10x10 grid on the roof of the warehouse
 type Warehouse interface {
 	Robots() []Robot
 }
@@ -29,9 +32,10 @@ type RobotState struct {
 
 // Task is used to identify whether robot has successfully completed a sequence of commands
 type Task struct {
-	command  string
-	executed bool
-	success  bool
+	command   string
+	executed  bool
+	success   bool
+	cancelled bool
 }
 
 // Building is the a concept building/site which implements Warehouse interface
@@ -56,18 +60,14 @@ func (b Building) Robots() []Robot {
 	return b.bots
 }
 
-type TaskCommand struct {
-	taskID  string
-	command string
-}
-
 // Bot installed on a warehouse roof
+// * implements robot interface
 type Bot struct {
 	mu               sync.RWMutex
-	tasks            map[string][]Task
+	taskMap          map[string]Task
 	state            RobotState
 	movementDuration time.Duration
-	taskCommand      chan TaskCommand
+	tasks            chan string
 
 	States chan RobotState
 	Errors chan error
@@ -76,120 +76,151 @@ type Bot struct {
 // NewBot instantiates a bot on a specified location on the roof
 func NewBot(x uint, y uint) Bot {
 	return Bot{
-		tasks:            map[string][]Task{},
-		state:            RobotState{X: x, Y: y},
-		movementDuration: time.Second,
-		taskCommand:      make(chan TaskCommand),
-		States:           make(chan RobotState),
-		Errors:           make(chan error)}
+		taskMap: map[string]Task{},
+		state:   RobotState{X: x, Y: y},
+		tasks:   make(chan string),
+		States:  make(chan RobotState),
+		Errors:  make(chan error)}
 }
 
 // RunRobot runs the robot to process incoming commands
-func (b Bot) RunRobot() {
+func (b *Bot) RunRobot() {
 	for {
 		select {
-		case tc := <-b.taskCommand:
-			log.Printf("Processing command: \"%s\"", tc)
-			b.putTask(tc.taskID, Task{tc.command, false, false})
-			updatedState, err := b.getUpdatedState(tc.command)
+		case taskID := <-b.tasks:
+			taskToProcess, err := b.getTask(taskID)
 			if err != nil {
-				go func() { b.Errors <- err }() // independent consumer can consume errors
+				log.Printf("Task %s cannot be processed - not found", taskID)
+				go func() { b.Errors <- err }()
 			} else {
-				log.Printf("New state: %v", updatedState)
-				log.Printf("Task states: %v", b.tasks)
-				b.state = updatedState
-				go func() { b.States <- updatedState }() // independent consumer can consume new states
+				log.Printf("Processing command: \"%s\"", taskToProcess.command)
+				updatedState, err := b.getUpdatedState(taskToProcess.command)
+				taskToProcess.executed = true
+				if err != nil {
+					b.putTask(taskID, taskToProcess)
+					go func() { b.Errors <- err }() // independent consumer can consume errors
+				} else {
+					log.Printf("Updating robot to new state: %v", updatedState)
+					b.UpdateCurrentState(updatedState)
+					go func() { b.States <- updatedState }() // independent consumer can consume state changes
+
+					log.Printf("Task states: %v", b.tasks) // TODO remove
+					taskToProcess.success = true
+					b.putTask(taskID, taskToProcess)
+				}
 			}
-		case err := <-b.Errors:
+		case err := <-b.Errors: // Example of consumer consuming errors
 			log.Printf("Error: %s", err.Error())
 		}
 	}
 }
 
-func getCommandSequence(commands string) ([]string, error) {
+// validateCommandSequence will validate string delimited movement input
+// only `N`, `S`, `E` and `W` characters are allowed within space-delimited string
+func validateCommandSequence(commands string) error {
 	// Check for empty string
 	trimmedCommands := strings.Trim(commands, " ")
 	if trimmedCommands == "" {
-		return []string{}, fmt.Errorf("Failed to execute empty commands - \"%s\"", commands)
+		return fmt.Errorf("Failed to execute empty commands - \"%s\"", commands)
 	}
 
 	// Check for invalid command types
 	commandSeq := strings.Split(trimmedCommands, " ")
 	for _, command := range commandSeq {
 		if !strings.Contains("NEWS", command) {
-			return []string{}, fmt.Errorf("Invalid command %s, command can only be one of 'N', 'S', 'E' or 'W'", command)
+			return fmt.Errorf("Invalid command %s, command can only be one of 'N', 'S', 'E' or 'W'", command)
 		}
 	}
 
 	// TODO check for string with multiple whitespaces
 
-	return commandSeq, nil
+	return nil
 }
 
-// EnqueueTask TODO
+// EnqueueTask queues a task on the `taskCommand` bot channel to be processed by `RunRobot` function
+// * implements robot
 func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) {
 	log.Printf("Processing commands: \"%s\"", commands)
 
-	// TODO generate taskID
-	taskID = "1"
+	taskID = uuid.NewV4().String()
 	position = b.States
 	err = b.Errors
 
-	// Asynchronously push commands to channel in-order
-	commandSeq, _ := getCommandSequence(commands)
-	go func() {
-		for _, command := range commandSeq {
-			b.taskCommand <- TaskCommand{taskID, command}
-		}
-	}()
+	b.putTask(taskID, Task{commands, false, false, false})
+	b.tasks <- taskID
 
 	return
 }
 
+// putTask stores the task on a map
 func (b Bot) putTask(id string, task Task) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	taskList, ok := b.tasks[id]
+	b.taskMap[id] = task
+}
+
+// getTask retrieves a task from the map - base on its id
+func (b Bot) getTask(id string) (Task, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	task, ok := b.taskMap[id]
 	if !ok {
-		b.tasks[id] = []Task{task}
-		log.Println("new")
-		return
+		return Task{}, fmt.Errorf("Unable to find task %s", id)
 	}
-	b.tasks[id] = append(taskList, task)
+	return task, nil
 }
 
-func (b Bot) getUpdatedState(command string) (RobotState, error) {
-	switch command {
-	case "N":
-		if b.state.Y+1 > 9 {
-			return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", command)
+// getUpdatedState translates a sequence of space delimited movement commands to a final RobotState
+func (b Bot) getUpdatedState(commands string) (RobotState, error) {
+	finalState := b.state
+	for _, command := range commands {
+		switch string(command) {
+		case "N":
+			if finalState.Y++; finalState.Y > 9 {
+				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+			}
+		case "S":
+			if int(finalState.Y)-1 < 0 {
+				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+			}
+			finalState.Y--
+		case "E":
+			if finalState.X++; finalState.X > 9 {
+				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+			}
+		case "W":
+			if int(finalState.X)-1 < 0 {
+				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+			}
+			finalState.X--
 		}
-		return RobotState{b.state.X, b.state.Y + 1, b.state.HasCrate}, nil
-	case "S":
-		if int(b.state.Y)-1 < 0 {
-			return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", command)
-		}
-		return RobotState{b.state.X, b.state.Y - 1, b.state.HasCrate}, nil
-	case "E":
-		if b.state.X+1 > 9 {
-			return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", command)
-		}
-		return RobotState{b.state.X + 1, b.state.Y, b.state.HasCrate}, nil
-	case "W":
-		if int(b.state.X)-1 < 0 {
-			return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", command)
-		}
-		return RobotState{b.state.X - 1, b.state.Y, b.state.HasCrate}, nil
 	}
-	return RobotState{}, fmt.Errorf("Invalid command %s", command)
+	return finalState, nil
 }
 
-// CancelTask TODO
+// CancelTask sets an existing task on the map to be cancelled
+// * implements robot
 func (b Bot) CancelTask(taskID string) error {
-	return errors.New("as")
+	task, err := b.getTask(taskID)
+	if err != nil {
+		return err
+	}
+	task.cancelled = true
+	b.putTask(taskID, task)
+	return nil
+}
+
+// UpdateCurrentState current state concurrent-safe
+func (b *Bot) UpdateCurrentState(rs RobotState) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.state = rs
 }
 
 // CurrentState returns the latest state of the robot
+// * implements robot
 func (b Bot) CurrentState() RobotState {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	return b.state
 }

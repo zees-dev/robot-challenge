@@ -61,10 +61,10 @@ func BodyToUpdateBot(reqBody io.Reader) (UpdateBot, error) {
 	return obj, nil
 }
 
-func robotServer(robot Robot) {
+func robotServer(robot Bot) {
 	router := mux.NewRouter()
 
-	// Robot routes
+	// Robot movement
 	router.HandleFunc("/move", func(w http.ResponseWriter, r *http.Request) {
 		// TODO use request context
 
@@ -74,7 +74,7 @@ func robotServer(robot Robot) {
 			return
 		}
 
-		_, err = getCommandSequence(body.Commands)
+		err = validateCommandSequence(body.Commands)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -88,139 +88,42 @@ func robotServer(robot Robot) {
 	// router.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
 	// 	// TODO use request context
 
-	// 	tasks := robotSvc.GetAllTasks()
-
+	// 	tasks := robot.getTask()
 	// 	fmt.Fprintf(w, "%v", tasks)
 	// }).Methods("GET")
 
-	// router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
-	// 	// TODO use request context
-	// 	vars := mux.Vars(r)
-	// 	id, err := vars["id"]
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
+	// GetTask
+	router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
+		// TODO use request context
+		vars := mux.Vars(r)
+		id, ok := vars["id"]
+		if !ok {
+			http.Error(w, "missing request id", http.StatusBadRequest)
+			return
+		}
 
-	// 	task <- robot.Errors
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusNotFound)
-	// 		return
-	// 	}
+		task, err := robot.getTask(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 
-	// 	fmt.Fprintf(w, "%v", task)
-	// }).Methods("GET")
+		fmt.Fprintf(w, "%v", task)
+	}).Methods("GET")
 
-	// router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
-	// 	// TODO use request context
-	// 	vars := mux.Vars(r)
-	// 	id := vars["id"]
+	// Cancel Task
+	router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
 
-	// 	err := robotSvc.CancelCommand(id)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
+		err := robot.CancelTask(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
-	// 	w.WriteHeader(http.StatusNoContent)
-	// }).Methods("DELETE")
-
-	// Warehouse routes
-
-	// router.HandleFunc("/warehouse", func(w http.ResponseWriter, r *http.Request) {
-	// 	warehouses := structureSvc.GetAllStructures()
-	// 	fmt.Fprintf(w, "%v", warehouses)
-	// }).Methods("GET")
-
-	// router.HandleFunc("/warehouse", func(w http.ResponseWriter, r *http.Request) {
-	// 	body, err := BodyToCreateWarehouse(r.Body)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	err = structureSvc.CreateStructure(Structure{ID: body.ID, Width: body.Width, Height: body.Height})
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusConflict)
-	// 		return
-	// 	}
-	// 	w.WriteHeader(http.StatusNoContent)
-	// }).Methods("POST")
-
-	// router.HandleFunc("/warehouse/{id}", func(w http.ResponseWriter, r *http.Request) {
-	// 	vars := mux.Vars(r)
-	// 	id, err := strconv.Atoi(vars["id"])
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-	// 	warehouse, err := structureSvc.GetStructure(uint64(id))
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusNotFound)
-	// 		return
-	// 	}
-
-	// 	fmt.Fprintf(w, "%v", warehouse)
-	// }).Methods("GET")
-
-	// Bot routes
-
-	// router.HandleFunc("/bot", func(w http.ResponseWriter, r *http.Request) {
-	// 	body, err := BodyToBot(r.Body)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	bot := NewBot(body.ID, body.WarehouseID, body.X, body.Y)
-
-	// 	err = botSvc.CreateBot(bot)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-	// 	w.WriteHeader(http.StatusNoContent)
-	// }).Methods("POST")
-
-	// router.HandleFunc("/bot/{id}", func(w http.ResponseWriter, r *http.Request) {
-	// 	vars := mux.Vars(r)
-	// 	id, err := strconv.Atoi(vars["id"])
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	bot, err := botSvc.db.GetBot(uint64(id))
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusNotFound)
-	// 		return
-	// 	}
-
-	// 	fmt.Fprintf(w, "%v", bot)
-	// }).Methods("GET")
-
-	// router.HandleFunc("/bot/{id}", func(w http.ResponseWriter, r *http.Request) {
-	// 	vars := mux.Vars(r)
-	// 	id, err := strconv.Atoi(vars["id"])
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	body, err := BodyToUpdateBot(r.Body)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	taskID, err := botSvc.UpdateBot(uint64(id), body.Commands)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	fmt.Fprintf(w, "%s", taskID)
-	// }).Methods("PUT")
+		w.WriteHeader(http.StatusNoContent)
+	}).Methods("DELETE")
 
 	log.Println("Starting admin server on :8000")
 	err := http.ListenAndServe(":8000", router)
