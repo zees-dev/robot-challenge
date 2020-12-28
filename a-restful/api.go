@@ -11,46 +11,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type CreateWarehouse struct {
-	ID     uint64 `json:"id"`
-	Width  uint32 `json:"width"`
-	Height uint32 `json:"height"`
-}
-
-type CreateBot struct {
-	ID          uint64 `json:"id"`
-	WarehouseID uint64 `json:"warehouseId"`
-	X           uint   `json:"x"`
-	Y           uint   `json:"y"`
-}
-
+// UpdateBot is request body to update robot state
 type UpdateBot struct {
 	Commands string `json:"commands"`
 }
 
-// BodyToCreateWarehouse marshals request body to CreateWarehouse
-func BodyToCreateWarehouse(reqBody io.Reader) (CreateWarehouse, error) {
-	var obj CreateWarehouse
-	err := json.NewDecoder(reqBody).Decode(&obj)
-	if err != nil {
-		log.Printf("Error converting body to CreateWarehouse: %v", err)
-		return CreateWarehouse{}, errors.New("failed to read request body")
-	}
-	return obj, nil
-}
-
-// BodyToBot marshals request body to CreateBot
-func BodyToBot(reqBody io.Reader) (CreateBot, error) {
-	var obj CreateBot
-	err := json.NewDecoder(reqBody).Decode(&obj)
-	if err != nil {
-		log.Printf("Error converting body to CreateBot: %v", err)
-		return CreateBot{}, errors.New("failed to read request body")
-	}
-	return obj, nil
-}
-
-// BodyToUpdateBot marshals request body to UpdateBot
+// BodyToUpdateBot marshals request body to UpdateBot struct
 func BodyToUpdateBot(reqBody io.Reader) (UpdateBot, error) {
 	var obj UpdateBot
 	err := json.NewDecoder(reqBody).Decode(&obj)
@@ -61,6 +27,7 @@ func BodyToUpdateBot(reqBody io.Reader) (UpdateBot, error) {
 	return obj, nil
 }
 
+// robotServer is the Restful API server exposed by robot which enables ground control station to communicate with it
 func robotServer(robot Bot) {
 	router := mux.NewRouter()
 
