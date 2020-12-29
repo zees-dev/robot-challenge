@@ -65,6 +65,8 @@ The solution can be run from the __a-restful__ directory via:
 go run .
 ```
 
+Note: The API does not consume the `Robot` SDK interface since a get task by ID method is required to fulfil requirements; the `Robot` interface does not have such a method...
+
 ### Assumptions
 
 - There is no time taken to execute a sequence of commands (assuming they are valid and  can be performed)
@@ -94,8 +96,12 @@ go test .
 ### Test with coverage
 
 ```sh
-go test . -coverprofile=cp.out
+go test . -coverprofile cp.out
+cat cp.out | grep -v "storage.go" > cover.out
+go tool cover -func cover.out
 ```
+
+Note: The `storage.go` file is ignored from coverage since the storage is de-coupled/pluggable (assuming the `Repository` interface is implemented)
 
 ## TODO
 
@@ -113,10 +119,10 @@ go test . -coverprofile=cp.out
   - Cancel command series (Delete)
     - /task/{id}
     - 204 (no content), 404 (command sequence with taskId not found)
+- [ ] Implement context based request cancellation
 
 - [ ] OpenAPI compliant spec
-  - Have a look at Twirp, GRPC-gateway
-  - Have a look at Go Kit - the transport should a decoupled part of the architecture
+  - Serve openapi file using static server
 
 - [ ] Testing
   - [x] Implement unit tests for functionality
