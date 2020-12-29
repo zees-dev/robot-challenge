@@ -201,7 +201,7 @@ func TestGetTaskEndpointNotFound(t *testing.T) {
 	}
 
 	// check response
-	resWant := `Task with ID: 'non-existent' not found`
+	resWant := `Task with ID 'non-existent' not found`
 	resGot := strings.TrimSpace(rr.Body.String())
 	if resWant != resGot {
 		t.Errorf(`incorrect error response; want: "%s", got: "%s"`, resWant, resGot)
@@ -256,7 +256,7 @@ func TestDeleteTaskEndpointNotFound(t *testing.T) {
 	}
 
 	// check response
-	resWant := `Task with ID: 'non-existent' not found`
+	resWant := `Task with ID 'non-existent' not found`
 	resGot := strings.TrimSpace(rr.Body.String())
 	if resWant != resGot {
 		t.Errorf(`incorrect error response; want: "%s", got: "%s"`, resWant, resGot)

@@ -33,7 +33,7 @@ func (db *InMemoryDB) GetTask(id string) (Task, error) {
 			return t, nil
 		}
 	}
-	return Task{}, fmt.Errorf("Task with ID: %s not found", id)
+	return Task{}, fmt.Errorf("Task with ID '%s' not found", id)
 }
 
 // CreateTask creates task in in-memory DB by ID in a concurrent-safe way
@@ -42,7 +42,7 @@ func (db *InMemoryDB) CreateTask(ct Task) error {
 	defer db.mu.Unlock()
 	for _, t := range db.tasks {
 		if t.id == ct.id {
-			return fmt.Errorf("Task with ID: %s already exists", t.id)
+			return fmt.Errorf("Task with ID '%s' already exists", t.id)
 		}
 	}
 	db.tasks = append(db.tasks, ct)
@@ -59,5 +59,5 @@ func (db *InMemoryDB) UpdateTask(ut Task) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Task with ID: %s not found", ut.id)
+	return fmt.Errorf("Task with ID '%s' not found", ut.id)
 }
