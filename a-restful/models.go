@@ -87,31 +87,42 @@ func (b *Bot) RunRobot() {
 	for {
 		select {
 		case taskID := <-b.tasks:
-			taskToProcess, err := b.repository.GetTask(taskID)
-			if err != nil {
-				log.Printf("Task %s cannot be processed - not found", taskID)
-				go func() { b.Errors <- err }()
-			} else {
+			// Wrap up in func to increase readability as we cannot break out of for..select
+			func() {
+				taskToProcess, err := b.repository.GetTask(taskID)
+				if err != nil {
+					log.Printf("Task %s cannot be processed - not found", taskID)
+					go func() { b.Errors <- err }()
+					return
+				}
+
+				if taskToProcess.cancelled {
+					log.Printf("Task %s has been cancelled", taskID)
+					return
+				}
+
 				log.Printf("Processing task %s: \"%s\"", taskID, taskToProcess.command)
 				updatedState, err := b.getUpdatedState(taskToProcess.command)
 				taskToProcess.executed = true
 				if err != nil {
 					b.repository.UpdateTask(taskToProcess)
 					go func() { b.Errors <- err }() // independent consumer can consume errors
-				} else {
-					log.Printf("Updating robot to new state: %v", updatedState)
-					err = b.UpdateCurrentState(updatedState)
-					if err != nil {
-						log.Printf("Failed to update robot to new state: %v", updatedState)
-						go func() { b.Errors <- err }() // independent consumer can consume errors
-					} else {
-						go func() { b.States <- updatedState }()    // independent consumer can consume state changes
-						log.Printf("Task states: %v", b.repository) // TODO remove
-						taskToProcess.success = true
-						b.repository.UpdateTask(taskToProcess)
-					}
+					return
 				}
-			}
+
+				log.Printf("Updating robot to new state: %v", updatedState)
+				err = b.UpdateCurrentState(updatedState)
+				if err != nil {
+					log.Printf("Failed to update robot to new state: %v", updatedState)
+					go func() { b.Errors <- err }() // independent consumer can consume errors
+					return
+				}
+
+				go func() { b.States <- updatedState }()    // independent consumer can consume state changes
+				log.Printf("Task states: %v", b.repository) // TODO remove
+				taskToProcess.success = true
+				b.repository.UpdateTask(taskToProcess)
+			}()
 		case err := <-b.Errors: // Example of consumer consuming errors
 			log.Printf("Error: %s", err.Error())
 		}
