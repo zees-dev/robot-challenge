@@ -32,16 +32,16 @@ func BodyToUpdateBot(reqBody io.Reader) (UpdateBot, error) {
 // only `N`, `S`, `E` and `W` characters are allowed within space-delimited string
 func validateCommandSequence(commands string) error {
 	// Check for empty string
-	trimmedCommands := strings.Trim(commands, " ")
+	trimmedCommands := strings.TrimSpace(commands)
 	if trimmedCommands == "" {
-		return fmt.Errorf("Failed to execute empty commands - \"%s\"", commands)
+		return errors.New("failed to execute empty commands")
 	}
 
 	// Check for invalid command types
 	commandSeq := strings.Split(trimmedCommands, " ")
 	for _, command := range commandSeq {
 		if !strings.Contains("NEWS", command) {
-			return fmt.Errorf("Invalid command %s, command can only be one of 'N', 'S', 'E' or 'W'", command)
+			return fmt.Errorf(`invalid command '%s', command can only be one of 'N', 'S', 'E' or 'W'`, command)
 		}
 	}
 
@@ -50,15 +50,21 @@ func validateCommandSequence(commands string) error {
 	return nil
 }
 
-// robotAPIServer is the Restful API server exposed by robot which enables ground control station to communicate with it
+// RobotAPIServer is the Restful API server exposed by robot which enables ground control station to communicate with it
 // Note: This could require `Robot` instead of `Bot` - but `Robot` does not have the `GetTask` method - which is a requirement...
 // - requirement: "Create a RESTful API to report the command series's execution status"
-func robotAPIServer(robot Bot) {
+func RobotAPIServer(robot Bot) http.Handler {
 	router := mux.NewRouter()
+
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"healthy"}`))
+	}).Methods("GET")
 
 	// Robot movement
 	router.HandleFunc("/move", func(w http.ResponseWriter, r *http.Request) {
 		// TODO use request context
+		w.Header().Set("Content-Type", "application/json")
 
 		body, err := BodyToUpdateBot(r.Body)
 		if err != nil {
@@ -74,15 +80,8 @@ func robotAPIServer(robot Bot) {
 
 		taskID, _, _ := robot.EnqueueTask(body.Commands)
 
-		fmt.Fprintf(w, "%s", taskID)
+		fmt.Fprintf(w, `{"taskID": "%s"}`, taskID)
 	}).Methods("PUT")
-
-	// router.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
-	// 	// TODO use request context
-
-	// 	tasks := robot.getTask()
-	// 	fmt.Fprintf(w, "%v", tasks)
-	// }).Methods("GET")
 
 	// GetTask by id
 	router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +99,7 @@ func robotAPIServer(robot Bot) {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%v", task)
 	}).Methods("GET")
 
@@ -117,7 +117,5 @@ func robotAPIServer(robot Bot) {
 		w.WriteHeader(http.StatusNoContent)
 	}).Methods("DELETE")
 
-	log.Println("Starting admin server on :8000...")
-	err := http.ListenAndServe(":8000", router)
-	log.Fatal(err)
+	return router
 }
