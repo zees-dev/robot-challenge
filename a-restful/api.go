@@ -51,6 +51,8 @@ func validateCommandSequence(commands string) error {
 }
 
 // robotAPIServer is the Restful API server exposed by robot which enables ground control station to communicate with it
+// Note: This could require `Robot` instead of `Bot` - but `Robot` does not have the `GetTask` method - which is a requirement...
+// - requirement: "Create a RESTful API to report the command series's execution status"
 func robotAPIServer(robot Bot) {
 	router := mux.NewRouter()
 
