@@ -37,28 +37,6 @@ type Task struct {
 	cancelled bool
 }
 
-// Building is the a concept building/site which implements Warehouse interface
-type Building struct {
-	bots   []Robot
-	Width  uint32
-	Height uint32
-}
-
-// NewBuilding building in which the robot operates
-func NewBuilding(id uint64) Building {
-	return Building{bots: []Robot{}, Width: 10, Height: 10}
-}
-
-// RegisterRobot registers a new robot into building/warehouse
-func (b Building) RegisterRobot(r Robot) []Robot {
-	return append(b.bots, r)
-}
-
-// Robots implements Warehouse
-func (b Building) Robots() []Robot {
-	return b.bots
-}
-
 // Bot installed on a warehouse roof
 // * implements robot interface
 type Bot struct {
