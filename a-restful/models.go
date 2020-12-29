@@ -123,8 +123,6 @@ func (b *Bot) RunRobot() {
 				taskToProcess.success = true
 				b.repository.UpdateTask(taskToProcess)
 			}()
-		case err := <-b.Errors: // Example of consumer consuming errors
-			log.Printf("Error: %s", err.Error())
 		}
 	}
 }
