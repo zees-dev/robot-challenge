@@ -209,7 +209,7 @@ func TestEnqueueTask(t *testing.T) {
 func TestCancelTask(t *testing.T) {
 	t.Run("test successfully cancels non-executed task", func(t *testing.T) {
 		bot := NewBot(0, 0, NewInMemoryDB())
-		go bot.RunRobot()
+		go func() { <-bot.tasks }()
 
 		commandSeq := "N E S W"
 		taskID, _, _ := bot.EnqueueTask(commandSeq)
