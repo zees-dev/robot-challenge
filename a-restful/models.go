@@ -101,10 +101,11 @@ func (b *Bot) RunRobot() {
 					return
 				}
 
-				log.Printf("Processing task %s: \"%s\"", taskID, taskToProcess.command)
+				log.Printf(`Processing task "%s": "%s"`, taskID, taskToProcess.command)
 				updatedState, err := b.getUpdatedState(taskToProcess.command)
 				taskToProcess.executed = true
 				if err != nil {
+					log.Printf("error: %s", err)
 					b.repository.UpdateTask(taskToProcess)
 					go func() { b.Errors <- err }() // independent consumer can consume errors
 					return
@@ -113,13 +114,12 @@ func (b *Bot) RunRobot() {
 				log.Printf("Updating robot to new state: %v", updatedState)
 				err = b.UpdateCurrentState(updatedState)
 				if err != nil {
-					log.Printf("Failed to update robot to new state: %v", updatedState)
+					log.Printf("failed to update robot to new state: %v", updatedState)
 					go func() { b.Errors <- err }() // independent consumer can consume errors
 					return
 				}
 
-				go func() { b.States <- updatedState }()    // independent consumer can consume state changes
-				log.Printf("Task states: %v", b.repository) // TODO remove
+				go func() { b.States <- updatedState }() // independent consumer can consume state changes
 				taskToProcess.success = true
 				b.repository.UpdateTask(taskToProcess)
 			}()
