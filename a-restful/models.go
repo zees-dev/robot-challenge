@@ -157,15 +157,11 @@ func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotSta
 
 // PutTask stores the task on a map
 func (b Bot) PutTask(id string, task Task) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
 	b.repository.UpdateTask(task)
 }
 
 // GetTask retrieves a task from the map - base on its id
 func (b Bot) GetTask(id string) (Task, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
 	return b.repository.GetTask(id)
 }
 
