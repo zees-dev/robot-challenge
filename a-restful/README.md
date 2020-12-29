@@ -59,7 +59,11 @@ type RobotState struct {
 
 ## Implementation
 
-...
+The solution can be run from the __a-restful__ directory via:
+
+```sh
+go run .
+```
 
 ### Assumptions
 
@@ -79,9 +83,23 @@ type RobotState struct {
 - [uuid](github.com/satori/go.uuid) - for unique taskID generation
 - [gorilla mux](github.com/gorilla/mux) - http request multiplexer (standard library compliant)
 
+## Testing
+
+[Unit tests](./models_test.go) and [integration tests](./api_test.go) have been implemented and can be run using:
+
+```sh
+go test .
+```
+
+### Test with coverage
+
+```sh
+go test . -coverprofile=cp.out
+```
+
 ## TODO
 
-- [ ] Implement Restful API endpoints
+- [x] Implement Restful API endpoints
   - Move robot (PUT)
     - /move
     - 200 (ok) - taskId & success/failure, 400 (bad request)
@@ -96,17 +114,18 @@ type RobotState struct {
     - /task/{id}
     - 204 (no content), 404 (command sequence with taskId not found)
 
-- [ ] Challenge SSE (server-sent-events) which sends -> taskId, status, robot final state
-  - Write up design/architecture doc (SSE, HTTP/2, browser support)
-
 - [ ] OpenAPI compliant spec
   - Have a look at Twirp, GRPC-gateway
   - Have a look at Go Kit - the transport should a decoupled part of the architecture
 
 - [ ] Testing
-  - [ ] Implement unit tests for functionality
-  - [ ] Implement integrations tests for API
-  - [ ] Implement test coverage
+  - [x] Implement unit tests for functionality
+  - [x] Implement integrations tests for API
+  - [x] Implement test coverage
+  - [ ] Check for race conditions
+
+- [ ] Challenge SSE (server-sent-events) which sends -> taskId, status, robot final state
+  - Write up design/architecture doc (SSE, HTTP/2, browser support)
 
 - [ ] Challenge
   - Implement minimal frontend or console UI to view state of a warehouse
@@ -117,73 +136,40 @@ type RobotState struct {
       - SSE (server-sent-events) which sends -> taskId, status, robot final state
 
 - [ ] Dockerize API
+- [ ] Implement makefile
+  - Update Readme
 
 ## Improvements
 
-- [ ] Implement Auth (JWT using bearer scheme)
-- [ ] Persist robot operations to a database (sqlite will do)
-- [ ] Distribute to [pkg.go.dev](https://pkg.go.dev/) for open source projects
-
-## Self-defined constraints & assumptions
-
-- Robos should not be able to collide with each other (error thrown if/when this happens)
-- The robot takes a certain time to move - this has been defaulted to 1 second per move
-- A 10x10 grid south-west = (0,0), while north-east = (9,9) - instead of (10,10)
-- `"N E N E N E N E"` ends up at (4,4) - there cannot be a true `center` for a 10x10 grid
-
-## Architecture
-
-- 2 servers
-  - RESTful Admin API server
-    - Deals with warehouse/bot creation
-    - Responsible for spinning up warehouse server(s)
-    - This server can double up as Auth server
-  - RESTful Warehouse API server
-    - Responsible for bot control within a warehouse
-    - Service contains in-memory state of a warehouse
-    - Successful bot state changes written to DB
-    - Ideally this server should use an IoT optimized protocol - gRPC would be perfect here
+- Implement Auth (JWT using bearer scheme)
+- Migrate to gRPC since its lower latency & bandwidth - hence best suited for thid usecase
+- Persist robot operations to a database (sqlite will do) - implement persistent repository
+- Distribute to [pkg.go.dev](https://pkg.go.dev/) for open source projects
 
 ## Rest Endpoints
 
-Move bot:
+### Health
+
+```sh
+curl -X GET 'localhost:8000/health'
+```
+
+### Move bot
 
 ```sh
 curl \
   -d '{"commands": "N E N E"}' \
-  -X PUT localhost:8000/move
+  -X PUT 'localhost:8000/move'
 ```
 
-<!-- Get all warehouses
+### Get command execution status
 
 ```sh
-curl localhost:8000/warehouse
+curl -X GET 'localhost:8000/task/<task-id>'
 ```
 
-Create warehouse:
+### Delete queue command sequence
 
 ```sh
-curl \
-  -d '{"id": 1, "width": 10, "height": 10}' \
-  -X POST localhost:8000/warehouse
+curl -X DELETE 'localhost:8000/task/<task-id>'
 ```
-
-Get warehouse by id
-
-```sh
-curl localhost:8000/warehouse/1
-```
-
-Create bot:
-
-```sh
-curl \
-  -d '{"id": 1, "warehouseId": 1, "x": 1, "y": 1}' \
-  -X POST localhost:8000/bot
-```
-
-```sh
-curl \
-  -d '{"id": 1, "warehouseId": 1, "x": 1, "y": 1}' \
-  -X POST localhost:8000/bot
-``` -->
