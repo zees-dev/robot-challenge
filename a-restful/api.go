@@ -37,6 +37,11 @@ func validateCommandSequence(commands string) error {
 		return errors.New("failed to execute empty commands")
 	}
 
+	// check for multiple whitespaces
+	if strings.Contains(commands, "  ") {
+		return fmt.Errorf(`invalid command '%s'; command  cannot contain multiple whitespaces`, commands)
+	}
+
 	// Check for invalid command types
 	commandSeq := strings.Split(trimmedCommands, " ")
 	for _, command := range commandSeq {
@@ -44,8 +49,6 @@ func validateCommandSequence(commands string) error {
 			return fmt.Errorf(`invalid command '%s', command can only be one of 'N', 'S', 'E' or 'W'`, command)
 		}
 	}
-
-	// TODO check for string with multiple whitespaces
 
 	return nil
 }

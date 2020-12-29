@@ -173,6 +173,39 @@ func TestMoveRobotEndpointEmptyCommands(t *testing.T) {
 	}
 }
 
+func TestMoveRobotEndpointMultipleWhitespaceCommands(t *testing.T) {
+	handler := getHTTPHandler()
+	rr := httptest.NewRecorder()
+
+	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N  E N"}`)))
+	if err != nil {
+		t.Error(err)
+	}
+
+	handler.ServeHTTP(rr, req)
+
+	// check response status code
+	statusWant := http.StatusBadRequest
+	statusGot := rr.Code
+	if statusWant != statusGot {
+		t.Errorf("handler returned wrong status code; want %v, got %v", statusWant, statusGot)
+	}
+
+	// check content type
+	contentTypeWant := "text/plain; charset=utf-8"
+	contentTypeGot := rr.Result().Header.Get("Content-Type")
+	if contentTypeWant != contentTypeGot {
+		t.Errorf(`incorrect content type header response; want: "%s", got: "%s"`, contentTypeWant, contentTypeGot)
+	}
+
+	// check response
+	resWant := `invalid command 'N  E N'; command  cannot contain multiple whitespaces`
+	resGot := strings.TrimSpace(rr.Body.String())
+	if resWant != resGot {
+		t.Errorf(`incorrect error response; want: "%s", got: "%s"`, resWant, resGot)
+	}
+}
+
 func TestGetTaskEndpointSuccess(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
