@@ -107,7 +107,7 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
 
 - [x] Implement Restful API endpoints
   - Move robot (PUT)
-    - /move
+    - /state
     - 200 (ok) - taskId & success/failure, 400 (bad request)
     - Note: Use context
   - Get list of commands sent to robot (taskId) with status (success/failed) (GET)
@@ -160,12 +160,18 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
 curl -X GET 'localhost:8000/health'
 ```
 
-### Move bot
+### Get bot state
+
+```sh
+curl -X GET 'localhost:8000/state'
+```
+
+### Update bot state
 
 ```sh
 curl \
   -d '{"commands": "N E N E"}' \
-  -X PUT 'localhost:8000/move'
+  -X PUT 'localhost:8000/state'
 ```
 
 ### Get command execution status

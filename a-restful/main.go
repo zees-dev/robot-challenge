@@ -30,7 +30,7 @@ func main() {
 	// TODO serve OpenAPI spec from static file server
 	// TODO serve minimal frontend from static file server
 
-	router := RobotAPIServer(robot)
+	router := RobotAPIServer(&robot)
 
 	log.Println("Starting admin server on :8000...")
 	err := http.ListenAndServe(":8000", router)

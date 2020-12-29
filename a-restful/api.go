@@ -53,7 +53,7 @@ func validateCommandSequence(commands string) error {
 // RobotAPIServer is the Restful API server exposed by robot which enables ground control station to communicate with it
 // Note: This could require `Robot` instead of `Bot` - but `Robot` does not have the `GetTask` method - which is a requirement...
 // - requirement: "Create a RESTful API to report the command series's execution status"
-func RobotAPIServer(robot Bot) http.Handler {
+func RobotAPIServer(robot *Bot) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -61,8 +61,17 @@ func RobotAPIServer(robot Bot) http.Handler {
 		w.Write([]byte(`{"status":"healthy"}`))
 	}).Methods("GET")
 
+	// Robot state
+	router.HandleFunc("/state", func(w http.ResponseWriter, r *http.Request) {
+		// TODO use request context
+		w.Header().Set("Content-Type", "application/json")
+
+		state := robot.CurrentState()
+		fmt.Fprintf(w, `{"x": %d, "y": %d}`, state.X, state.Y)
+	}).Methods("GET")
+
 	// Robot movement
-	router.HandleFunc("/move", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/state", func(w http.ResponseWriter, r *http.Request) {
 		// TODO use request context
 		w.Header().Set("Content-Type", "application/json")
 

@@ -13,7 +13,7 @@ import (
 func getHTTPHandler() http.Handler {
 	robot := NewBot(0, 0, NewInMemoryDB())
 	go robot.RunRobot()
-	handler := RobotAPIServer(robot)
+	handler := RobotAPIServer(&robot)
 	return handler
 }
 
@@ -41,10 +41,50 @@ func TestHealthEndpoint(t *testing.T) {
 	}
 }
 
+func TestGetRobotStateEndpointSuccess(t *testing.T) {
+	handler := getHTTPHandler()
+	rr := httptest.NewRecorder()
+	req, err := http.NewRequest("GET", "/state", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	handler.ServeHTTP(rr, req)
+
+	// check response status code
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	// unmarshal response body
+	var responseBody map[string]uint
+	json.Unmarshal(rr.Body.Bytes(), &responseBody)
+
+	fmt.Println(responseBody)
+
+	// check if `taskID` exists in json response
+	x, ok := responseBody["x"]
+	if !ok {
+		t.Error("response must contain `x`")
+	}
+	if x != 0 {
+		t.Error("x co-ordinate should be 0")
+	}
+
+	y, ok := responseBody["y"]
+	if !ok {
+		t.Error("response must contain `y`")
+	}
+	if y != 0 {
+		t.Error("y co-ordinate should be 0")
+	}
+}
+
 func TestMoveRobotEndpointSuccess(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("PUT", "/move", bytes.NewBuffer([]byte(`{"commands":"N E N E"}`)))
+	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E N E"}`)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +111,7 @@ func TestMoveRobotEndpointInvalidCommands(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/move", bytes.NewBuffer([]byte(`{"commands":"N E N A"}`)))
+	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E N A"}`)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -104,7 +144,7 @@ func TestMoveRobotEndpointEmptyCommands(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/move", bytes.NewBuffer([]byte(`{"commands":" "}`)))
+	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":" "}`)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -139,7 +179,7 @@ func TestGetTaskEndpointSuccess(t *testing.T) {
 
 	taskID := func() string {
 		rr := httptest.NewRecorder()
-		req, _ := http.NewRequest("PUT", "/move", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
+		req, _ := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
 		handler.ServeHTTP(rr, req)
 		var responseBody map[string]string
 		json.Unmarshal(rr.Body.Bytes(), &responseBody)
@@ -214,7 +254,7 @@ func TestDeleteTaskEndpointSuccess(t *testing.T) {
 
 	taskID := func() string {
 		rr := httptest.NewRecorder()
-		req, _ := http.NewRequest("PUT", "/move", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
+		req, _ := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
 		handler.ServeHTTP(rr, req)
 		var responseBody map[string]string
 		json.Unmarshal(rr.Body.Bytes(), &responseBody)

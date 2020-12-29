@@ -100,6 +100,7 @@ func (b *Bot) RunRobot() {
 				go func() { b.States <- updatedState }() // independent consumer can consume state changes
 				taskToProcess.success = true
 				b.repository.UpdateTask(taskToProcess)
+				log.Printf("successfully updated robot to state %v", b.CurrentState())
 			}()
 		}
 	}
@@ -183,5 +184,6 @@ func (b *Bot) UpdateCurrentState(rs RobotState) error {
 func (b Bot) CurrentState() RobotState {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	log.Println(b.state)
 	return b.state
 }
