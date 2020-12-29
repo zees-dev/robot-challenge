@@ -168,6 +168,10 @@ func (b Bot) CancelTask(taskID string) error {
 	if err != nil {
 		return err
 	}
+	if task.executed {
+		return fmt.Errorf("task %s has already been executed", taskID)
+	}
+
 	task.cancelled = true
 	b.repository.UpdateTask(task)
 	return nil
