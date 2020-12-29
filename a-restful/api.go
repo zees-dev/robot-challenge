@@ -100,7 +100,7 @@ func RobotAPIServer(robot Bot) http.Handler {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%v", task)
+		fmt.Fprintf(w, `{"task":{"id":"%s","command":"%s","executed":%t,"cancelled":%t,"success":%t}}`, task.id, task.command, task.executed, task.cancelled, task.success)
 	}).Methods("GET")
 
 	// Cancel Task by id
