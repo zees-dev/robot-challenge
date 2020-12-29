@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
 	"sync"
 
 	uuid "github.com/satori/go.uuid"
@@ -116,28 +115,6 @@ func (b *Bot) RunRobot() {
 			log.Printf("Error: %s", err.Error())
 		}
 	}
-}
-
-// validateCommandSequence will validate string delimited movement input
-// only `N`, `S`, `E` and `W` characters are allowed within space-delimited string
-func validateCommandSequence(commands string) error {
-	// Check for empty string
-	trimmedCommands := strings.Trim(commands, " ")
-	if trimmedCommands == "" {
-		return fmt.Errorf("Failed to execute empty commands - \"%s\"", commands)
-	}
-
-	// Check for invalid command types
-	commandSeq := strings.Split(trimmedCommands, " ")
-	for _, command := range commandSeq {
-		if !strings.Contains("NEWS", command) {
-			return fmt.Errorf("Invalid command %s, command can only be one of 'N', 'S', 'E' or 'W'", command)
-		}
-	}
-
-	// TODO check for string with multiple whitespaces
-
-	return nil
 }
 
 // EnqueueTask queues a task on the `taskCommand` bot channel to be processed by `RunRobot` function

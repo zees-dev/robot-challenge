@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -25,6 +26,28 @@ func BodyToUpdateBot(reqBody io.Reader) (UpdateBot, error) {
 		return UpdateBot{}, errors.New("failed to read request body")
 	}
 	return obj, nil
+}
+
+// validateCommandSequence will validate string delimited movement input
+// only `N`, `S`, `E` and `W` characters are allowed within space-delimited string
+func validateCommandSequence(commands string) error {
+	// Check for empty string
+	trimmedCommands := strings.Trim(commands, " ")
+	if trimmedCommands == "" {
+		return fmt.Errorf("Failed to execute empty commands - \"%s\"", commands)
+	}
+
+	// Check for invalid command types
+	commandSeq := strings.Split(trimmedCommands, " ")
+	for _, command := range commandSeq {
+		if !strings.Contains("NEWS", command) {
+			return fmt.Errorf("Invalid command %s, command can only be one of 'N', 'S', 'E' or 'W'", command)
+		}
+	}
+
+	// TODO check for string with multiple whitespaces
+
+	return nil
 }
 
 // robotAPIServer is the Restful API server exposed by robot which enables ground control station to communicate with it
