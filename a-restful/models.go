@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 	"sync"
-	"time"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -64,11 +63,10 @@ func (b Building) Robots() []Robot {
 // Bot installed on a warehouse roof
 // * implements robot interface
 type Bot struct {
-	mu               sync.RWMutex
-	repository       Repository
-	state            RobotState
-	movementDuration time.Duration
-	tasks            chan string
+	mu         sync.RWMutex
+	repository Repository
+	state      RobotState
+	tasks      chan string
 
 	States chan RobotState
 	Errors chan error
