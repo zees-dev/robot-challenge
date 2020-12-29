@@ -83,6 +83,7 @@ func NewBot(x uint, y uint, repository Repository) Bot {
 
 // RunRobot runs the robot to process incoming commands
 func (b *Bot) RunRobot() {
+	log.Println("Running robot, listening to operations...")
 	for {
 		select {
 		case taskID := <-b.tasks:
@@ -91,7 +92,7 @@ func (b *Bot) RunRobot() {
 				log.Printf("Task %s cannot be processed - not found", taskID)
 				go func() { b.Errors <- err }()
 			} else {
-				log.Printf("Processing commands: \"%s\"", taskToProcess.command)
+				log.Printf("Processing task %s: \"%s\"", taskID, taskToProcess.command)
 				updatedState, err := b.getUpdatedState(taskToProcess.command)
 				taskToProcess.executed = true
 				if err != nil {
@@ -139,20 +140,20 @@ func (b Bot) getUpdatedState(commands string) (RobotState, error) {
 		switch string(command) {
 		case "N":
 			if finalState.Y++; finalState.Y > 9 {
-				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
 			}
 		case "S":
 			if int(finalState.Y)-1 < 0 {
-				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
 			}
 			finalState.Y--
 		case "E":
 			if finalState.X++; finalState.X > 9 {
-				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
 			}
 		case "W":
 			if int(finalState.X)-1 < 0 {
-				return RobotState{}, fmt.Errorf("Command %s exceeds warehouse dimensions", string(command))
+				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
 			}
 			finalState.X--
 		}
