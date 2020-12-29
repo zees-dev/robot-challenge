@@ -100,12 +100,16 @@ func (b *Bot) RunRobot() {
 					go func() { b.Errors <- err }() // independent consumer can consume errors
 				} else {
 					log.Printf("Updating robot to new state: %v", updatedState)
-					b.UpdateCurrentState(updatedState)
-					go func() { b.States <- updatedState }() // independent consumer can consume state changes
-
-					log.Printf("Task states: %v", b.repository) // TODO remove
-					taskToProcess.success = true
-					b.PutTask(taskID, taskToProcess)
+					err = b.UpdateCurrentState(updatedState)
+					if err != nil {
+						log.Printf("Failed to update robot to new state: %v", updatedState)
+						go func() { b.Errors <- err }() // independent consumer can consume errors
+					} else {
+						go func() { b.States <- updatedState }()    // independent consumer can consume state changes
+						log.Printf("Task states: %v", b.repository) // TODO remove
+						taskToProcess.success = true
+						b.PutTask(taskID, taskToProcess)
+					}
 				}
 			}
 		case err := <-b.Errors: // Example of consumer consuming errors
@@ -205,11 +209,18 @@ func (b Bot) CancelTask(taskID string) error {
 	return nil
 }
 
-// UpdateCurrentState current state concurrent-safe
-func (b *Bot) UpdateCurrentState(rs RobotState) {
+// UpdateCurrentState current state concurrent-safe way; additionally this method ensures robotstate lies within warehouse dimensions
+func (b *Bot) UpdateCurrentState(rs RobotState) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	if rs.X < 0 || rs.X > 9 {
+		return fmt.Errorf("Robot state X position (%d, y) exceeds warehouse dimensions", rs.X)
+	}
+	if rs.Y < 0 || rs.Y > 9 {
+		return fmt.Errorf("Robot state Y position (x, %d) exceeds warehouse dimensions", rs.Y)
+	}
 	b.state = rs
+	return nil
 }
 
 // CurrentState returns the latest state of the robot
