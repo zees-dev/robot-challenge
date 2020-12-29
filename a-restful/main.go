@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 )
 
 func main() {
@@ -29,7 +30,11 @@ func main() {
 	// TODO serve OpenAPI spec from static file server
 	// TODO serve minimal frontend from static file server
 
-	robotAPIServer(robot)
+	router := RobotAPIServer(robot)
 
-	// TODO look into graceful server shutdown (OS signals)
+	log.Println("Starting admin server on :8000...")
+	err := http.ListenAndServe(":8000", router)
+	log.Fatal(err)
+
+	// TODO graceful server shutdown (OS signals)
 }
