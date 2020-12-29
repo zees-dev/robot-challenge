@@ -87,7 +87,7 @@ func (b *Bot) RunRobot() {
 	for {
 		select {
 		case taskID := <-b.tasks:
-			taskToProcess, err := b.GetTask(taskID)
+			taskToProcess, err := b.repository.GetTask(taskID)
 			if err != nil {
 				log.Printf("Task %s cannot be processed - not found", taskID)
 				go func() { b.Errors <- err }()
@@ -96,7 +96,7 @@ func (b *Bot) RunRobot() {
 				updatedState, err := b.getUpdatedState(taskToProcess.command)
 				taskToProcess.executed = true
 				if err != nil {
-					b.PutTask(taskID, taskToProcess)
+					b.repository.UpdateTask(taskToProcess)
 					go func() { b.Errors <- err }() // independent consumer can consume errors
 				} else {
 					log.Printf("Updating robot to new state: %v", updatedState)
@@ -108,7 +108,7 @@ func (b *Bot) RunRobot() {
 						go func() { b.States <- updatedState }()    // independent consumer can consume state changes
 						log.Printf("Task states: %v", b.repository) // TODO remove
 						taskToProcess.success = true
-						b.PutTask(taskID, taskToProcess)
+						b.repository.UpdateTask(taskToProcess)
 					}
 				}
 			}
@@ -155,16 +155,6 @@ func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotSta
 	return
 }
 
-// PutTask stores the task on a map
-func (b Bot) PutTask(id string, task Task) {
-	b.repository.UpdateTask(task)
-}
-
-// GetTask retrieves a task from the map - base on its id
-func (b Bot) GetTask(id string) (Task, error) {
-	return b.repository.GetTask(id)
-}
-
 // getUpdatedState translates a sequence of space delimited movement commands to a final RobotState
 func (b Bot) getUpdatedState(commands string) (RobotState, error) {
 	finalState := b.state
@@ -196,12 +186,12 @@ func (b Bot) getUpdatedState(commands string) (RobotState, error) {
 // CancelTask sets an existing task on the map to be cancelled
 // * implements robot
 func (b Bot) CancelTask(taskID string) error {
-	task, err := b.GetTask(taskID)
+	task, err := b.repository.GetTask(taskID)
 	if err != nil {
 		return err
 	}
 	task.cancelled = true
-	b.PutTask(taskID, task)
+	b.repository.UpdateTask(task)
 	return nil
 }
 
