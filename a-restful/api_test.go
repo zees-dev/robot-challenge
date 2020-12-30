@@ -281,8 +281,14 @@ func TestGetTaskEndpointNotFound(t *testing.T) {
 	}
 }
 
+// TestDeleteTaskEndpointSuccess is tested without `getHTTPHandler` since we need to manually instantiate server without `robot.listen
+// This is because order of operations for cancel task is not guaranteed if `robot.listen` is running (as goroutine can process/modify task)
+// which can prevent task cancellation (since task may already be executed)
 func TestDeleteTaskEndpointSuccess(t *testing.T) {
-	handler := getHTTPHandler()
+	robot := NewBot(0, 0, NewInMemoryDB())
+	go func() { <-robot.tasks }() // prevent channel blocking
+	handler := RobotAPIServer(&robot)
+
 	rr := httptest.NewRecorder()
 
 	taskID := func() string {

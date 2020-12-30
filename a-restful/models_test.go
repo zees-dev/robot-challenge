@@ -223,7 +223,7 @@ func TestCancelTask(t *testing.T) {
 
 	t.Run("test fails to find non-existent task", func(t *testing.T) {
 		bot := NewBot(0, 0, NewInMemoryDB())
-		go bot.listen()
+		go func() { <-bot.tasks }()
 
 		commandSeq := "N E S W"
 		bot.EnqueueTask(commandSeq)
@@ -236,7 +236,7 @@ func TestCancelTask(t *testing.T) {
 
 	t.Run("test failed to cancel pre-executed task", func(t *testing.T) {
 		bot := NewBot(0, 0, NewInMemoryDB())
-		go bot.listen()
+		go func() { <-bot.tasks }()
 
 		commandSeq := "N E S W"
 		taskID, _, _ := bot.EnqueueTask(commandSeq)
