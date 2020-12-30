@@ -106,6 +106,14 @@ Note: The API does not consume the `Robot` SDK interface since a get task by ID 
 go test .
 ```
 
+### Test race conditions
+
+```sh
+go test -race .
+```
+
+Note: The command above requires `CGO_ENABLED=1`
+
 ### Test with coverage
 
 ```sh
