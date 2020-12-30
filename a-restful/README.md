@@ -57,33 +57,46 @@ type RobotState struct {
 
 ---
 
-## Implementation
+## Solution
 
-The solution can be run from the __a-restful__ directory via:
+The solution can be run from the __a-restful__ directory.\
+The server is run at port _8000_:
 
 ```sh
 go run .
 ```
 
+### Command line flags
+
+The `x` and `y` flags can optionally be passed in upon running the robot server to set the initial robot position on the warehouse - these currectly default to `0, 0` respectively.
+
+### Frontend
+
+A lightweight browser based frontend is server at [http://localhost:8000/](http://localhost:8000/) which allows one to visually interact with the robot server APIs.
+
+Note: This is an implementation of the challenge
+
+### Open API
+
+The robot server is Open API compliant; and hence serves  the Open API spec to enable API interactivity and testing from the browser. The spec is served at [http://localhost:8000/swaggerui/](http://localhost:8000/swaggerui/).
+
+
 Note: The API does not consume the `Robot` SDK interface since a get task by ID method is required to fulfil requirements; the `Robot` interface does not have such a method...
 
-### Assumptions
+## Implementation assumptions
 
 - There is no time taken to execute a sequence of commands (assuming they are valid and  can be performed)
   - Hence it is probably only possible to cancel an in-flight command if the server is receiving too many commands and the desired command associated to taskID has not been executed yet (still in channel queue)
 - There is only a single robot operating on the roof (registrations and/or collisions with  other robots is out of scope)
 
-### Features
+## Features
 
 - This solution should enable high-throughput, concurrent safe robot operations
+- Interactive frontend to view robot state on a grid (in browser) - in realtime
 - OpenAPI spec for Restful API calls
 - Pluggable storage (in-memory map, database or any other storage) - achieved via implementation of repository interface
-- Serverside event support - a client can subscribe to HTTP2 SSE to get real-time updates of robot state
-
-## 3rd party modules
-
-- [uuid](github.com/satori/go.uuid) - for unique taskID generation
-- [gorilla mux](github.com/gorilla/mux) - http request multiplexer (standard library compliant)
+- Server-side event support - a client can subscribe to SSE to get real-time updates of robot state
+  - This is a POC of proposed solution to real-time notifications (challenge)
 
 ## Testing
 
@@ -103,6 +116,11 @@ go tool cover -func cover.out
 
 Note: The `storage.go` file is ignored from coverage since the storage is de-coupled/pluggable (assuming the `Repository` interface is implemented)
 
+## 3rd party modules
+
+- [uuid](github.com/satori/go.uuid) - for unique taskID generation
+- [gorilla mux](github.com/gorilla/mux) - http request multiplexer (standard library compliant)
+
 ## TODO
 
 - [x] Implement Restful API endpoints
@@ -121,7 +139,7 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
     - 204 (no content), 404 (command sequence with taskId not found)
 - [ ] Implement context based request cancellation
 
-- [ ] OpenAPI compliant spec
+- [x] OpenAPI compliant spec
   - Serve openapi file using static server
 
 - [ ] Testing
@@ -130,20 +148,15 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
   - [x] Implement test coverage
   - [ ] Check for race conditions
 
-- [ ] Challenge SSE (server-sent-events) which sends -> taskId, status, robot final state
-  - Write up design/architecture doc (SSE, HTTP/2, browser support)
-
-- [ ] Challenge
+- [x] Challenge
   - Implement minimal frontend or console UI to view state of a warehouse
     - Serve this static SPA or directory from backend API
-  - A `writer` should get notified of successful command completion (potentially write output to file)
-    - Write up design/architecture doc (SSE, HTTP/2, browser support)
-    - The writer sends server-side event to an admin panel?
-      - SSE (server-sent-events) which sends -> taskId, status, robot final state
+  - Technical design document proposing how clients can gett notified to robot state changes
+
+- [ ] Implement challenge POC
 
 - [ ] Dockerize API
 - [ ] Implement makefile
-  - Update Readme
 
 ## Improvements
 
@@ -157,13 +170,13 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
 ### Health
 
 ```sh
-curl -X GET 'localhost:8000/health'
+curl -X GET 'http://localhost:8000/health'
 ```
 
 ### Get bot state
 
 ```sh
-curl -X GET 'localhost:8000/state'
+curl -X GET 'http://localhost:8000/api/v1/state'
 ```
 
 ### Update bot state
@@ -171,17 +184,23 @@ curl -X GET 'localhost:8000/state'
 ```sh
 curl \
   -d '{"commands": "N E N E"}' \
-  -X PUT 'localhost:8000/state'
+  -X PUT 'http://localhost:8000/api/v1/state'
 ```
 
 ### Get command execution status
 
 ```sh
-curl -X GET 'localhost:8000/task/<task-id>'
+curl -X GET 'http://localhost:8000/api/v1/task/<task-id>'
 ```
 
-### Delete queue command sequence
+### Cancel queue command sequence
 
 ```sh
-curl -X DELETE 'localhost:8000/task/<task-id>'
+curl -X DELETE 'http://localhost:8000/api/v1/task/<task-id>'
+```
+
+## Subscribe to real-time robot state updates
+
+```sh
+curl -X GET 'http://localhost:8000/api/v1/state/subscribe'
 ```
