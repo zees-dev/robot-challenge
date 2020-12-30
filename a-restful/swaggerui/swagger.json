@@ -1,0 +1,264 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is the Open API spec for the Restful robot server.",
+    "version": "1.0.0",
+    "title": "Robot API",
+    "license": {
+      "name": "Unlicense",
+      "url": "https://unlicense.org/"
+    }
+  },
+  "host": "localhost:8000",
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Robot server health"
+    },
+    {
+      "name": "State",
+      "description": "Robot states"
+    },
+    {
+      "name": "Task",
+      "description": "Robot tasks"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Robot server status",
+        "description": "Identify whether robot server is running - used by k8s and/or other monitoring systems for periodic health checks",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Health"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/state": {
+      "get": {
+        "tags": [
+          "State"
+        ],
+        "summary": "Gets current robot state",
+        "description": "Obtain x,y co-ordinates of the robot operating on warehouse roof",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/RobotState"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "State"
+        ],
+        "summary": "Update robot state",
+        "description": "Queue robot state changes via sending a command sequence",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "command sequence consisting of whitespace delimited string of characters `N`, `S`, `E` and `W` to update robot state",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Commands"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/TaskID"
+            }
+          },
+          "400": {
+            "description": "error description"
+          }
+        }
+      }
+    },
+    "/api/v1/state/subscribe": {
+      "get": {
+        "tags": [
+          "State"
+        ],
+        "summary": "Get real-time robot state (POC)",
+        "description": "**POC**: Server side event stream to get real-time notifications/updates of robot state",
+        "produces": [
+          "text/event-stream"
+        ],
+        "responses": {
+          "default": {
+            "description": "SSE event messages",
+            "schema": {
+              "$ref": "#/definitions/RobotState"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/task/{id}": {
+      "get": {
+        "tags": [
+          "Task"
+        ],
+        "summary": "Get task execution status",
+        "description": "Get a previously queued tasks execution details",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "taskID of previously queued command sequence",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Task"
+            }
+          },
+          "400": {
+            "description": "Invalid id supplied"
+          },
+          "404": {
+            "description": "Task not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Task"
+        ],
+        "summary": "Cancel task",
+        "description": "Cancels a task/command sequence which has yet to be executed",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "taskID of previously queued command sequence",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Invalid id supplied"
+          },
+          "404": {
+            "description": "Task not found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Health": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "default": "healthy"
+        }
+      }
+    },
+    "RobotState": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "integer",
+          "format": "uint"
+        },
+        "y": {
+          "type": "integer",
+          "format": "uint"
+        }
+      }
+    },
+    "TaskID": {
+      "type": "object",
+      "properties": {
+        "taskID": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "Task": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "command": {
+              "type": "string"
+            },
+            "executed": {
+              "type": "boolean",
+              "default": false
+            },
+            "cancelled": {
+              "type": "boolean",
+              "default": false
+            },
+            "success": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "Commands": {
+      "type": "object",
+      "properties": {
+        "commands": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

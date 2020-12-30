@@ -59,6 +59,12 @@ func validateCommandSequence(commands string) error {
 func RobotAPIServer(robot *Bot) http.Handler {
 	router := mux.NewRouter()
 
+	// serve swagger ui
+	log.Println(`serving open api spec at "/swaggerui/"...`)
+	swaggerui := http.StripPrefix("/swaggerui/", http.FileServer(http.Dir("./swaggerui/")))
+	router.PathPrefix("/swaggerui/").Handler(swaggerui)
+
+	// server health endpoint
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"healthy"}`))
