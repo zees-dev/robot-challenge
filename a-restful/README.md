@@ -66,6 +66,20 @@ The server is run at port _8000_:
 go run .
 ```
 
+## Run via Docker
+
+Build:
+
+```sh
+docker build -t rocos-robot:alpine -f Dockerfile ..
+```
+
+Run:
+
+```sh
+docker run --rm -it -p 8000:8000 rocos-robot:alpine
+```
+
 ### Command line flags
 
 The `x` and `y` flags can optionally be passed in upon running the robot server to set the initial robot position on the warehouse - these currectly default to `0, 0` respectively.
@@ -154,7 +168,7 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
   - [x] Implement unit tests for functionality
   - [x] Implement integrations tests for API
   - [x] Implement test coverage
-  - [ ] Check for race conditions
+  - [x] Check for race conditions
 
 - [x] Challenge
   - Implement minimal frontend or console UI to view state of a warehouse
@@ -163,7 +177,7 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
 
 - [ ] Implement challenge POC
 
-- [ ] Dockerize API
+- [x] Dockerize API
 - [ ] Implement makefile
 
 ## Improvements
