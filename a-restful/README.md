@@ -185,7 +185,7 @@ curl -X GET 'http://localhost:8000/api/v1/task/<task-id>'
 curl -X DELETE 'http://localhost:8000/api/v1/task/<task-id>'
 ```
 
-## Subscribe to real-time robot state updates
+### Subscribe to real-time robot state updates
 
 ```sh
 curl -X GET 'http://localhost:8000/api/v1/state/subscribe'
