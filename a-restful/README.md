@@ -94,14 +94,13 @@ Note: This is an implementation of the challenge
 
 The robot server is Open API compliant; and hence serves  the Open API spec to enable API interactivity and testing from the browser. The spec is served at [http://localhost:8000/swaggerui/](http://localhost:8000/swaggerui/).
 
-
-Note: The API does not consume the `Robot` SDK interface since a get task by ID method is required to fulfil requirements; the `Robot` interface does not have such a method...
-
 ## Implementation assumptions
 
 - There is no time taken to execute a sequence of commands (assuming they are valid and  can be performed)
   - Hence it is probably only possible to cancel an in-flight command if the server is receiving too many commands and the desired command associated to taskID has not been executed yet (still in channel queue)
 - There is only a single robot operating on the roof (registrations and/or collisions with  other robots is out of scope)
+
+Note: The API does not consume the `Robot` SDK interface since a get task by ID method is required to fulfil requirements; the `Robot` interface does not have such a method...
 
 ## Features
 
@@ -142,43 +141,6 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
 
 - [uuid](github.com/satori/go.uuid) - for unique taskID generation
 - [gorilla mux](github.com/gorilla/mux) - http request multiplexer (standard library compliant)
-
-## TODO
-
-- [x] Implement Restful API endpoints
-  - Move robot (PUT)
-    - /state
-    - 200 (ok) - taskId & success/failure, 400 (bad request)
-    - Note: Use context
-  - Get list of commands sent to robot (taskId) with status (success/failed) (GET)
-    - /tasks
-    - 200 (ok)
-  - Get single command status by taskId (GET)
-    - /task/{id}
-    - 200 (ok), 404 (command sequence with taskId not found)
-  - Cancel command series (Delete)
-    - /task/{id}
-    - 204 (no content), 404 (command sequence with taskId not found)
-- [ ] Implement context based request cancellation
-
-- [x] OpenAPI compliant spec
-  - Serve openapi file using static server
-
-- [ ] Testing
-  - [x] Implement unit tests for functionality
-  - [x] Implement integrations tests for API
-  - [x] Implement test coverage
-  - [x] Check for race conditions
-
-- [x] Challenge
-  - Implement minimal frontend or console UI to view state of a warehouse
-    - Serve this static SPA or directory from backend API
-  - Technical design document proposing how clients can gett notified to robot state changes
-
-- [ ] Implement challenge POC
-
-- [x] Dockerize API
-- [ ] Implement makefile
 
 ## Improvements
 
@@ -226,3 +188,41 @@ curl -X DELETE 'http://localhost:8000/api/v1/task/<task-id>'
 ```sh
 curl -X GET 'http://localhost:8000/api/v1/state/subscribe'
 ```
+
+---
+
+## TODO
+
+- [x] Implement Restful API endpoints
+  - Move robot (PUT)
+    - /state
+    - 200 (ok) - taskId & success/failure, 400 (bad request)
+    - Note: Use context
+  - Get list of commands sent to robot (taskId) with status (success/failed) (GET)
+    - /tasks
+    - 200 (ok)
+  - Get single command status by taskId (GET)
+    - /task/{id}
+    - 200 (ok), 404 (command sequence with taskId not found)
+  - Cancel command series (Delete)
+    - /task/{id}
+    - 204 (no content), 404 (command sequence with taskId not found)
+- [ ] Implement context based request cancellation
+
+- [x] OpenAPI compliant spec
+  - Serve openapi file using static server
+
+- [x] Testing
+  - [x] Implement unit tests for functionality
+  - [x] Implement integrations tests for API
+  - [x] Implement test coverage
+  - [x] Check for race conditions
+
+- [x] Challenge
+  - Implement minimal frontend or console UI to view state of a warehouse
+    - Serve this static SPA or directory from backend API
+  - Technical design document proposing how clients can gett notified to robot state changes
+
+- [ ] Implement challenge POC
+
+- [x] Dockerize API
