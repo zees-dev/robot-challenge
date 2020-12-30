@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func TestBotImplementsRobot(t *testing.T) {
+	bot := NewBot(0, 0, NewInMemoryDB())
+	_, ok := interface{}(bot).(Robot)
+	if !ok {
+		t.Errorf("bot must asatisfy the `Robot` interface")
+	}
+}
+
 func TestValidateCommandSequence(t *testing.T) {
 	t.Run("test invalid character", func(t *testing.T) {
 		commands := "A N"
