@@ -65,7 +65,7 @@ func RobotAPIServer(robot *Bot) http.Handler {
 	}).Methods("GET")
 
 	// Robot state
-	router.HandleFunc("/state", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/v1/state", func(w http.ResponseWriter, r *http.Request) {
 		// TODO use request context
 		w.Header().Set("Content-Type", "application/json")
 
@@ -74,7 +74,7 @@ func RobotAPIServer(robot *Bot) http.Handler {
 	}).Methods("GET")
 
 	// Robot movement
-	router.HandleFunc("/state", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/v1/state", func(w http.ResponseWriter, r *http.Request) {
 		// TODO use request context
 		w.Header().Set("Content-Type", "application/json")
 
@@ -96,7 +96,7 @@ func RobotAPIServer(robot *Bot) http.Handler {
 	}).Methods("PUT")
 
 	// GetTask by id
-	router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/v1/task/{id}", func(w http.ResponseWriter, r *http.Request) {
 		// TODO use request context
 		vars := mux.Vars(r)
 		id, ok := vars["id"]
@@ -116,7 +116,7 @@ func RobotAPIServer(robot *Bot) http.Handler {
 	}).Methods("GET")
 
 	// Cancel Task by id
-	router.HandleFunc("/task/{id}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/v1/task/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 

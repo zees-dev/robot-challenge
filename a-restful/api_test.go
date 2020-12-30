@@ -44,7 +44,7 @@ func TestHealthEndpoint(t *testing.T) {
 func TestGetRobotStateEndpointSuccess(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/state", nil)
+	req, err := http.NewRequest("GET", "/api/v1/state", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func TestGetRobotStateEndpointSuccess(t *testing.T) {
 func TestMoveRobotEndpointSuccess(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E N E"}`)))
+	req, err := http.NewRequest("PUT", "/api/v1/state", bytes.NewBuffer([]byte(`{"commands":"N E N E"}`)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestMoveRobotEndpointInvalidCommands(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E N A"}`)))
+	req, err := http.NewRequest("PUT", "/api/v1/state", bytes.NewBuffer([]byte(`{"commands":"N E N A"}`)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -144,7 +144,7 @@ func TestMoveRobotEndpointEmptyCommands(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":" "}`)))
+	req, err := http.NewRequest("PUT", "/api/v1/state", bytes.NewBuffer([]byte(`{"commands":" "}`)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -177,7 +177,7 @@ func TestMoveRobotEndpointMultipleWhitespaceCommands(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N  E N"}`)))
+	req, err := http.NewRequest("PUT", "/api/v1/state", bytes.NewBuffer([]byte(`{"commands":"N  E N"}`)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -212,14 +212,14 @@ func TestGetTaskEndpointSuccess(t *testing.T) {
 
 	taskID := func() string {
 		rr := httptest.NewRecorder()
-		req, _ := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
+		req, _ := http.NewRequest("PUT", "/api/v1/state", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
 		handler.ServeHTTP(rr, req)
 		var responseBody map[string]string
 		json.Unmarshal(rr.Body.Bytes(), &responseBody)
 		return responseBody["taskID"]
 	}()
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("/task/%s", taskID), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v1/task/%s", taskID), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -258,7 +258,7 @@ func TestGetTaskEndpointSuccess(t *testing.T) {
 func TestGetTaskEndpointNotFound(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/task/non-existent", nil)
+	req, err := http.NewRequest("GET", "/api/v1/task/non-existent", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,14 +287,14 @@ func TestDeleteTaskEndpointSuccess(t *testing.T) {
 
 	taskID := func() string {
 		rr := httptest.NewRecorder()
-		req, _ := http.NewRequest("PUT", "/state", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
+		req, _ := http.NewRequest("PUT", "/api/v1/state", bytes.NewBuffer([]byte(`{"commands":"N E"}`)))
 		handler.ServeHTTP(rr, req)
 		var responseBody map[string]string
 		json.Unmarshal(rr.Body.Bytes(), &responseBody)
 		return responseBody["taskID"]
 	}()
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("/task/%s", taskID), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/api/v1/task/%s", taskID), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -313,7 +313,7 @@ func TestDeleteTaskEndpointSuccess(t *testing.T) {
 func TestDeleteTaskEndpointNotFound(t *testing.T) {
 	handler := getHTTPHandler()
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("DELETE", "/task/non-existent", nil)
+	req, err := http.NewRequest("DELETE", "/api/v1/task/non-existent", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
