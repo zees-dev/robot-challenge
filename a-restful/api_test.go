@@ -12,7 +12,7 @@ import (
 
 func getHTTPHandler() http.Handler {
 	robot := NewBot(0, 0, NewInMemoryDB())
-	go robot.RunRobot()
+	go robot.listen()
 	handler := RobotAPIServer(&robot)
 	return handler
 }

@@ -223,7 +223,7 @@ func TestCancelTask(t *testing.T) {
 
 	t.Run("test fails to find non-existent task", func(t *testing.T) {
 		bot := NewBot(0, 0, NewInMemoryDB())
-		go bot.RunRobot()
+		go bot.listen()
 
 		commandSeq := "N E S W"
 		bot.EnqueueTask(commandSeq)
@@ -236,7 +236,7 @@ func TestCancelTask(t *testing.T) {
 
 	t.Run("test failed to cancel pre-executed task", func(t *testing.T) {
 		bot := NewBot(0, 0, NewInMemoryDB())
-		go bot.RunRobot()
+		go bot.listen()
 
 		commandSeq := "N E S W"
 		taskID, _, _ := bot.EnqueueTask(commandSeq)
@@ -255,7 +255,7 @@ func TestCancelTask(t *testing.T) {
 // TestRobotMovementSubscriptions provides an insight of how consumers of the `position` channel can subscribe to robot state changes
 func TestRobotMovementSubscriptions(t *testing.T) {
 	bot := NewBot(0, 0, NewInMemoryDB())
-	go bot.RunRobot()
+	go bot.listen()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -276,7 +276,7 @@ func TestRobotMovementSubscriptions(t *testing.T) {
 // TestRobotErrorSubscriptions provides an insight of how consumers of the `err` channel can subscribe to invalid robot state changes
 func TestRobotErrorSubscriptions(t *testing.T) {
 	bot := NewBot(0, 0, NewInMemoryDB())
-	go bot.RunRobot()
+	go bot.listen()
 
 	var wg sync.WaitGroup
 	wg.Add(1)

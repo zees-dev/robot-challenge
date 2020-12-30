@@ -59,8 +59,8 @@ func NewBot(x uint, y uint, repository Repository) Bot {
 		Errors:     make(chan error)}
 }
 
-// RunRobot runs the robot to process incoming commands
-func (b *Bot) RunRobot() {
+// listen runs the robot to process incoming commands
+func (b *Bot) listen() {
 	log.Println("Running robot, listening to operations...")
 	for {
 		select {
@@ -106,7 +106,7 @@ func (b *Bot) RunRobot() {
 	}
 }
 
-// EnqueueTask queues a task on the `taskCommand` bot channel to be processed by `RunRobot` function
+// EnqueueTask queues a task on the `taskCommand` bot channel to be processed by `listen` function
 // * implements robot
 func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotState, err chan error) {
 	log.Printf("Queueing commands: \"%s\"", commands)

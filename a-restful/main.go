@@ -23,10 +23,9 @@ func main() {
 	db := NewInMemoryDB()
 
 	robot := NewBot(x, y, db)
-	go robot.RunRobot()
+	go robot.listen()
 	log.Printf("Initialising robot at (%d, %d)...", x, y)
 
-	// TODO run static file server
 	// TODO serve OpenAPI spec from static file server
 	// TODO serve minimal frontend from static file server
 
