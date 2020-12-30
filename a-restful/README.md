@@ -94,6 +94,8 @@ Note: This is an implementation of the challenge
 
 The robot server is Open API compliant; and hence serves  the Open API spec to enable API interactivity and testing from the browser. The spec is served at [http://localhost:8000/swaggerui/](http://localhost:8000/swaggerui/).
 
+Note: Only the [spec](./swaggerui/swagger.json) was designed from the [swagger editor](https://editor.swagger.io/); the UI files to render the spec have been obtained from [official swagger repo](https://github.com/swagger-api/swagger-ui/tree/master/dist).
+
 ## Implementation assumptions
 
 - There is no time taken to execute a sequence of commands (assuming they are valid and  can be performed)
