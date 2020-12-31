@@ -109,7 +109,7 @@
           "State"
         ],
         "summary": "Get real-time robot state (POC)",
-        "description": "**POC**: Server side event stream to get real-time notifications/updates of robot state",
+        "description": "**POC**: Server-Sent Event (SSE) stream to get real-time notifications/updates of robot state",
         "produces": [
           "text/event-stream"
         ],
