@@ -26,9 +26,6 @@ func main() {
 	go robot.listen()
 	log.Printf("Initialising robot at (%d, %d)...", x, y)
 
-	// TODO serve OpenAPI spec from static file server
-	// TODO serve minimal frontend from static file server
-
 	router := RobotAPIServer(&robot)
 
 	log.Println("Starting admin server on :8000...")

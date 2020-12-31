@@ -76,7 +76,7 @@ func RobotAPIServer(robot *Bot) http.Handler {
 
 	// Robot state
 	router.HandleFunc("/api/v1/state", func(w http.ResponseWriter, r *http.Request) {
-		// TODO use request context
+		// TODO use request context for cancellations
 		w.Header().Set("Content-Type", "application/json")
 
 		state := robot.CurrentState()
@@ -85,7 +85,7 @@ func RobotAPIServer(robot *Bot) http.Handler {
 
 	// Robot movement
 	router.HandleFunc("/api/v1/state", func(w http.ResponseWriter, r *http.Request) {
-		// TODO use request context
+		// TODO use request context for cancellations
 		w.Header().Set("Content-Type", "application/json")
 
 		body, err := BodyToUpdateBot(r.Body)
@@ -107,7 +107,7 @@ func RobotAPIServer(robot *Bot) http.Handler {
 
 	// GetTask by id
 	router.HandleFunc("/api/v1/task/{id}", func(w http.ResponseWriter, r *http.Request) {
-		// TODO use request context
+		// TODO use request context for cancellations
 		vars := mux.Vars(r)
 		id, ok := vars["id"]
 		if !ok {
