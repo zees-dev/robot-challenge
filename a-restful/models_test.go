@@ -295,7 +295,7 @@ func TestRobotErrorSubscriptions(t *testing.T) {
 
 	wg.Wait()
 
-	want := errors.New("command `S` exceeds warehouse dimensions")
+	want := errors.New(`command 'S' of "N E S S" exceeds warehouse dimensions`)
 
 	if got.Error() != want.Error() {
 		t.Errorf("robot movement should have thrown error; got: \"%s\", want: \"%s\"", got, want)

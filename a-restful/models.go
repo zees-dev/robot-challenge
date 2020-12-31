@@ -123,25 +123,29 @@ func (b Bot) EnqueueTask(commands string) (taskID string, position chan RobotSta
 
 // getUpdatedState translates a sequence of space delimited movement commands to a final RobotState
 func (b Bot) getUpdatedState(commands string) (RobotState, error) {
+	genErr := func(command, commands string) error {
+		return fmt.Errorf(`command '%s' of "%s" exceeds warehouse dimensions`, command, commands)
+	}
+
 	finalState := b.state
 	for _, command := range commands {
 		switch string(command) {
 		case "N":
 			if finalState.Y++; finalState.Y > 9 {
-				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
+				return RobotState{}, genErr(string(command), commands)
 			}
 		case "S":
 			if int(finalState.Y)-1 < 0 {
-				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
+				return RobotState{}, genErr(string(command), commands)
 			}
 			finalState.Y--
 		case "E":
 			if finalState.X++; finalState.X > 9 {
-				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
+				return RobotState{}, genErr(string(command), commands)
 			}
 		case "W":
 			if int(finalState.X)-1 < 0 {
-				return RobotState{}, fmt.Errorf("command `%s` exceeds warehouse dimensions", string(command))
+				return RobotState{}, genErr(string(command), commands)
 			}
 			finalState.X--
 		}
