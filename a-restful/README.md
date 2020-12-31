@@ -60,7 +60,15 @@ type RobotState struct {
 ## Solution
 
 The solution can be run from the __a-restful__ directory.\
-The server is run at port _8000_:
+The server is run at port _8000_.
+
+Install go modules:
+
+```sh
+go mod download
+```
+
+Run Restful robot server:
 
 ```sh
 go run .
@@ -71,7 +79,7 @@ go run .
 Build:
 
 ```sh
-docker build -t rocos-robot:alpine -f Dockerfile ..
+docker build -t rocos-robot:alpine .
 ```
 
 Run:

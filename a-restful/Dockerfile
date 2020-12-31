@@ -6,8 +6,6 @@ WORKDIR /go/src/app
 COPY . .
 RUN go mod download
 
-
-WORKDIR /go/src/app/a-restful
 RUN go build -o ./app
 
 EXPOSE 8000

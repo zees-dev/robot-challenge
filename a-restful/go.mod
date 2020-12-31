@@ -1,4 +1,4 @@
-module github.com/zees-dev/robot-challenge
+module github.com/zees-dev/robot-challenge/a-restful
 
 go 1.15
 
