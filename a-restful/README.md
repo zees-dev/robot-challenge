@@ -124,8 +124,9 @@ The robot server is Open API compliant; and hence serves  the Open API spec to e
 - Interactive frontend to view robot state on a grid (in browser) - in realtime
 - OpenAPI spec for Restful API calls
 - Pluggable storage (in-memory map, database or any other storage) - achieved via implementation of repository interface
-- Server-side event support - a client can subscribe to SSE to get real-time updates of robot state
+- Server-Sent Events support - a client can subscribe to SSE to get real-time updates of robot state
   - This is a POC of proposed solution to real-time notifications (challenge)
+  - The provided frontend is using this solution to get notified/updated in real-time (upon robot state changes)
 
 ## Testing
 
