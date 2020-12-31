@@ -100,7 +100,10 @@ go run . -x 5 -y 2
 
 ### Frontend
 
-A lightweight browser based frontend is server at [http://localhost:8000/](http://localhost:8000/) which allows one to visually interact with the robot server APIs.
+A minimal browser based frontend/client is served at [http://localhost:8000/](http://localhost:8000/) which allows one to visually interact with the robot server APIs.
+
+- This has been included the demonstrate API functionality
+- The frontend also implements a POC of the challenge (realtime robot notifications)  to demonstrate high level design viability of robot notifications.
 
 **Note:** This is an implementation of the challenge
 
@@ -122,6 +125,7 @@ The robot server is Open API compliant; and hence serves  the Open API spec to e
 
 - This solution should enable high-throughput, concurrent safe robot operations
 - Interactive frontend to view robot state on a grid (in browser) - in realtime
+  - 
 - OpenAPI spec for Restful API calls
 - Pluggable storage (in-memory map, database or any other storage) - achieved via implementation of repository interface
 - Server-Sent Events support - a client can subscribe to SSE to get real-time updates of robot state
