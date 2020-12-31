@@ -62,6 +62,7 @@
       }
 
       set position({ x, y }) {
+        document.querySelectorAll(".block").forEach(el => el.classList.remove('has-robot'))
         document.querySelector(`#p${x}${y}`).classList.add('has-robot')
       }
 
@@ -73,7 +74,6 @@
       clear() {
         this.input = ''
         this.commandNode.innerText = this.input
-        console.log(this.input)
       }
 
       async send() {
@@ -85,6 +85,7 @@
         })
         const { taskID } = await resRaw.json()
         this.taskNode.innerText = taskID
+        this.clear()
       }
     }
 
@@ -93,19 +94,11 @@
     const keyMap = { ArrowUp: 'N', ArrowDown: 'S', ArrowLeft: 'W', ArrowRight: 'E' }
     document.addEventListener('keydown', e => commands.val = (keyMap[e.key] || ''))
 
+    // View robot state changes in realtime using EventSource API with golang Server-Sent Events
     const evtSource = new EventSource('/api/v1/state/subscribe')
-    evtSource.addEventListener('message', (event) => {
-      debugger
-      console.log(event.data);
-    });
-    // evtSource.onmessage = function(e) {
-    //   debugger
-    //   console.log(e.data)
-    // }
-    evtSource.onerror = function(err) {
-      debugger
-      console.error("EventSource failed:", err);
-    }
+    evtSource.addEventListener('robotstate', e => commands.position = JSON.parse(e.data))
+    evtSource.addEventListener('roboterror', e => alert(e.data))
+    evtSource.onerror = err => console.error(`EventSource server error: ${err}`)
   </script>
 </body>
 </html>
