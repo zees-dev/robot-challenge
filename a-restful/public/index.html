@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background-color: powderblue; }
+
+    #root { display: flex; flex-flow: column-reverse; }
+
+    .horizontal { display: flex; }
+
+    .block {
+      width: 50px;
+      height: 50px;
+      border: 1px solid black;
+      background-color: yellow;
+    }
+
+    .has-robot { background-color: green; }
+  </style>
+  <title>Robot State</title>
+</head>
+<body>
+  <div id="root"></div>
+
+  <h2>Commands: <span id="cnode"></span></h2>
+  <button type="button" onclick="commands.send()">SEND</button>
+  <button type="button" onclick="commands.clear()">CLEAR</button>
+
+  <h2>Last task id: <span id="tnode"></span></h2>
+
+  <br/>
+
+  <p>Instructions:<br/>Use keyboard keys to queue commands, then click the send button to send them to server</p>
+
+  <script>
+    // Setup grid
+    const root = document.querySelector('#root')
+    for(let i = 0; i<10; i++) {
+      const child = document.createElement('div')
+      child.classList.add('horizontal')
+      for(let j = 0; j<10; j++) {
+        const childDiv = document.createElement('div')
+        const id = `p${j}${i}`
+        childDiv.setAttribute('class', 'block')
+        childDiv.setAttribute('id', id)
+        childDiv.textContent = `(${j}, ${i})`
+        child.appendChild(childDiv)
+      }
+      root.appendChild(child)
+    }
+
+    // Command string building class (poor-mans application state)
+    class Commands {
+      constructor(cNode, tNode) {
+        this.commandNode = cNode
+        this.taskNode = tNode
+        this.input = ''
+        this.taskID = '(NONE)'
+        fetch('/api/v1/state').then(res => res.json()).then(data => this.position = data)
+      }
+
+      set position({ x, y }) {
+        document.querySelector(`#p${x}${y}`).classList.add('has-robot')
+      }
+
+      set val(input) {
+        this.input += input
+        this.commandNode.innerText = this.input.split('').join(' ')
+      }
+
+      clear() {
+        this.input = ''
+        this.commandNode.innerText = this.input
+        console.log(this.input)
+      }
+
+      async send() {
+        const payload = { commands: this.input.split('').join(' ') }
+        const resRaw = await fetch('/api/v1/state', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const { taskID } = await resRaw.json()
+        this.taskNode.innerText = taskID
+      }
+    }
+
+    // Register keyboard listener
+    const commands = new Commands(document.querySelector('#cnode'), document.querySelector('#tnode'))
+    const keyMap = { ArrowUp: 'N', ArrowDown: 'S', ArrowLeft: 'W', ArrowRight: 'E' }
+    document.addEventListener('keydown', e => commands.val = (keyMap[e.key] || ''))
+
+    const evtSource = new EventSource('/api/v1/state/subscribe')
+    evtSource.addEventListener('message', (event) => {
+      debugger
+      console.log(event.data);
+    });
+    // evtSource.onmessage = function(e) {
+    //   debugger
+    //   console.log(e.data)
+    // }
+    evtSource.onerror = function(err) {
+      debugger
+      console.error("EventSource failed:", err);
+    }
+  </script>
+</body>
+</html>
