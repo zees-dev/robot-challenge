@@ -148,6 +148,7 @@ Note: The `storage.go` file is ignored from coverage since the storage is de-cou
 
 - Implement Auth (JWT using bearer scheme)
 - Migrate to gRPC since its lower latency & bandwidth - hence best suited for thid usecase
+- Use Go 1.6 (currently in beta; released in Q1 2021) to embed static files into single binary (new feature)
 - Persist robot operations to a database (sqlite will do) - implement persistent repository
 - Distribute to [pkg.go.dev](https://pkg.go.dev/) for open source projects
 
