@@ -59,7 +59,11 @@ func validateCommandSequence(commands string) error {
 func RobotAPIServer(robot *Bot) http.Handler {
 	router := mux.NewRouter()
 
-	// serve swagger ui
+	// static file server for frontend - NOTE: go1.6 can embed files directory into binary
+	log.Println(`serving frontend at "/"...`)
+	router.Handle("/", http.FileServer(http.Dir("./public")))
+
+	// serve swagger ui - NOTE: go1.6 can embed files directory into binary
 	log.Println(`serving open api spec at "/swaggerui/"...`)
 	swaggerui := http.StripPrefix("/swaggerui/", http.FileServer(http.Dir("./swaggerui/")))
 	router.PathPrefix("/swaggerui/").Handler(swaggerui)
@@ -124,13 +128,19 @@ func RobotAPIServer(robot *Bot) http.Handler {
 	// Cancel Task by id
 	router.HandleFunc("/api/v1/task/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id := vars["id"]
+		id, ok := vars["id"]
+		if !ok {
+			http.Error(w, "missing request id", http.StatusBadRequest)
+			return
+		}
 
 		err := robot.CancelTask(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+
+		// TODO return 400 for scenario where task has already been executed
 
 		w.WriteHeader(http.StatusNoContent)
 	}).Methods("DELETE")
