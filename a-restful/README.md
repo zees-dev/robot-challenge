@@ -62,13 +62,13 @@ type RobotState struct {
 The solution can be run from the __a-restful__ directory.\
 The server is run at port _8000_.
 
-Install go modules:
+**Install go modules:**
 
 ```sh
 go mod download
 ```
 
-Run Restful robot server:
+**Run Restful robot server:**
 
 ```sh
 go run .
@@ -76,13 +76,13 @@ go run .
 
 ## Run via Docker
 
-Build:
+**Build:**
 
 ```sh
 docker build -t rocos-robot:alpine .
 ```
 
-Run:
+**Run:**
 
 ```sh
 docker run --rm -it -p 8000:8000 rocos-robot:alpine
@@ -92,17 +92,23 @@ docker run --rm -it -p 8000:8000 rocos-robot:alpine
 
 The `x` and `y` flags can optionally be passed in upon running the robot server to set the initial robot position on the warehouse - these currectly default to `0, 0` respectively.
 
+**Example - initialising robot at position (5, 2):**
+
+```sh
+go run . -x 5 -y 2
+```
+
 ### Frontend
 
 A lightweight browser based frontend is server at [http://localhost:8000/](http://localhost:8000/) which allows one to visually interact with the robot server APIs.
 
-Note: This is an implementation of the challenge
+**Note:** This is an implementation of the challenge
 
 ### Open API
 
 The robot server is Open API compliant; and hence serves  the Open API spec to enable API interactivity and testing from the browser. The spec is served at [http://localhost:8000/swaggerui/](http://localhost:8000/swaggerui/).
 
-Note: Only the [spec](./swaggerui/swagger.json) was designed from the [swagger editor](https://editor.swagger.io/); the UI files to render the spec have been obtained from [official swagger repo](https://github.com/swagger-api/swagger-ui/tree/master/dist).
+**Note:** Only the [spec](./swaggerui/swagger.json) was designed from the [swagger editor](https://editor.swagger.io/); the UI files to render the spec have been obtained from [official swagger repo](https://github.com/swagger-api/swagger-ui/tree/master/dist).
 
 ## Implementation assumptions
 
@@ -110,7 +116,7 @@ Note: Only the [spec](./swaggerui/swagger.json) was designed from the [swagger e
   - Hence it is probably only possible to cancel an in-flight command if the server is receiving too many commands and the desired command associated to taskID has not been executed yet (still in channel queue)
 - There is only a single robot operating on the roof (registrations and/or collisions with  other robots is out of scope)
 
-Note: The API does not consume the `Robot` SDK interface since a get task by ID method is required to fulfil requirements; the `Robot` interface does not have such a method...
+**Note:** The API does not consume the `Robot` SDK interface since a get task by ID method is required to fulfil requirements; the `Robot` interface does not have such a method...
 
 ## Features
 
@@ -145,7 +151,7 @@ cat cp.out | grep -v "storage.go" > cover.out
 go tool cover -func cover.out
 ```
 
-Note: The `storage.go` file is ignored from coverage since the storage is de-coupled/pluggable (assuming the `Repository` interface is implemented)
+**Note:** The `storage.go` file is ignored from coverage since the storage is de-coupled/pluggable (assuming the `Repository` interface is implemented)
 
 ## 3rd party modules
 
