@@ -163,6 +163,9 @@ func RobotAPIServer(robot *Bot) http.Handler {
 		w.Header().Set("Connection", "keep-alive")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
+		// TODO - gracefully handle client disconnections
+		// - this is just a POC to demonstrate real-time updates to single client using SSE)
+
 		// enqueue empty task to hook into state and error channels
 		_, stateCh, errorsCh := robot.EnqueueTask("")
 
@@ -185,7 +188,6 @@ func RobotAPIServer(robot *Bot) http.Handler {
 				return
 			}
 		}
-
 	}).Methods("GET")
 
 	return router
