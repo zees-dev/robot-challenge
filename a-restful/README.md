@@ -225,6 +225,6 @@ curl -X GET 'http://localhost:8000/api/v1/state/subscribe'
     - Serve this static SPA or directory from backend API
   - Technical design document proposing how clients can gett notified to robot state changes
 
-- [ ] Implement challenge POC
+- [x] Implement challenge POC
 
 - [x] Dockerize API
